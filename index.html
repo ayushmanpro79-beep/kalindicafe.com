@@ -711,37 +711,74 @@ footer{
   </div>
 </div>
 
-<script>
-// ── PASSWORD (change 'kalindis2025' to anything you want) ──
+<script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+
+// ── PASSWORD (unchanged: this is the same Writer Studio password gate) ──
 const STUDIO_PASS = 'kalindis2025';
 
-// ── STORAGE KEY ──
+// ── SUPABASE SETTINGS ──
+// STEP 1: Replace these two values with your own Supabase project values.
+// Supabase Dashboard → Project Settings → API
+const SUPABASE_URL = 'https://jpglwrixumtahvrclzjy.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpwZ2x3cml4dW10YWh2cmNsemp5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyNDM3OTYsImV4cCI6MjA5MjgxOTc5Nn0.hfraH05QQ1PZ-SE2Y0g_nspmH0FMvVvztpJ355dvn9A';
+
+// STEP 2: Keep this bucket name same as the bucket you create in Supabase Storage.
+const PDF_BUCKET = 'novel-pdfs';
+
+// STEP 3: Keep this table name same as the table you create in Supabase Database.
+const EPISODES_TABLE = 'episodes';
+
+const SUPABASE_READY = SUPABASE_URL.startsWith('https://') && SUPABASE_ANON_KEY.length > 40;
+const supabase = SUPABASE_READY ? createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+
+// ── OLD LOCAL STORAGE KEY, used only for safe fallback / old imported data ──
 const STORE_KEY = 'kalindis_episodes';
 
 // ── Episodes in memory ──
 let episodes = [];
+let currentPdfFile = null;
 
 // ──────────────────────────────────────────────
-// LOAD from localStorage on page start
+// LOAD episodes on page start
 // ──────────────────────────────────────────────
-function loadEpisodes(){
-  try{
-    const raw = localStorage.getItem(STORE_KEY);
-    if(raw) episodes = JSON.parse(raw);
-  }catch(e){ episodes = []; }
+async function loadEpisodes(){
+  if(SUPABASE_READY){
+    await loadEpisodesFromSupabase();
+  } else {
+    loadEpisodesFromLocalStorage();
+    showSetupNotice();
+  }
   renderPublic();
   renderManage();
 }
 
-function saveToStore(){
-  // We store metadata + base64 PDF. For large PDFs this may hit localStorage limit (~5MB).
-  // The UI warns if it fails.
-  const meta = episodes.map(e=>({num:e.num,title:e.title,part:e.part,pdfData:e.pdfData}));
+async function loadEpisodesFromSupabase(){
+  const { data, error } = await supabase
+    .from(EPISODES_TABLE)
+    .select('num,title,part,pdf_path')
+    .order('num', { ascending:true });
+
+  if(error){
+    console.error(error);
+    loadEpisodesFromLocalStorage();
+    return;
+  }
+  episodes = data || [];
+}
+
+function loadEpisodesFromLocalStorage(){
   try{
-    localStorage.setItem(STORE_KEY, JSON.stringify(meta));
-    return true;
-  }catch(e){
-    return false;
+    const raw = localStorage.getItem(STORE_KEY);
+    if(raw) episodes = JSON.parse(raw);
+  }catch(e){ episodes = []; }
+}
+
+function showSetupNotice(){
+  const msg = document.getElementById('formMsg');
+  if(msg){
+    msg.style.color='#e8a96a';
+    msg.textContent='Supabase is not configured yet. Add your URL and anon key in this file.';
   }
 }
 
@@ -770,23 +807,32 @@ function renderPublic(){
 // ──────────────────────────────────────────────
 // PDF READER
 // ──────────────────────────────────────────────
-function openReader(num){
+async function openReader(num){
   const ep = episodes.find(e=>e.num===num);
-  if(!ep||!ep.pdfData){ alert('PDF not found.'); return; }
+  if(!ep){ alert('Episode not found.'); return; }
+
   document.getElementById('readerTitle').textContent = `Ep ${ep.num} — ${ep.title}`;
-  // Open base64 PDF in iframe
   const frame = document.getElementById('readerFrame');
-  // Use object URL for cleaner rendering
-  try{
-    const byteStr = atob(ep.pdfData.split(',')[1]);
-    const bytes = new Uint8Array(byteStr.length);
-    for(let i=0;i<byteStr.length;i++) bytes[i]=byteStr.charCodeAt(i);
-    const blob = new Blob([bytes],{type:'application/pdf'});
-    const url = URL.createObjectURL(blob);
-    frame.src = url;
-  }catch(e){
-    frame.src = ep.pdfData;
+
+  if(ep.pdf_path && SUPABASE_READY){
+    const { data } = supabase.storage.from(PDF_BUCKET).getPublicUrl(ep.pdf_path);
+    frame.src = data.publicUrl;
+  } else if(ep.pdfData){
+    // Fallback for older localStorage episodes.
+    try{
+      const byteStr = atob(ep.pdfData.split(',')[1]);
+      const bytes = new Uint8Array(byteStr.length);
+      for(let i=0;i<byteStr.length;i++) bytes[i]=byteStr.charCodeAt(i);
+      const blob = new Blob([bytes],{type:'application/pdf'});
+      frame.src = URL.createObjectURL(blob);
+    }catch(e){
+      frame.src = ep.pdfData;
+    }
+  } else {
+    alert('PDF not found.');
+    return;
   }
+
   document.getElementById('readerOverlay').classList.add('open');
   document.body.style.overflow='hidden';
 }
@@ -798,7 +844,7 @@ function closeReader(){
 }
 
 // ──────────────────────────────────────────────
-// STUDIO GATE
+// STUDIO GATE — unchanged behavior: click logo 5 times, then password
 // ──────────────────────────────────────────────
 let logoClicks = 0, logoTimer;
 document.getElementById('logoClick').addEventListener('click',()=>{
@@ -838,29 +884,33 @@ function openStudio(){
   renderManage();
   document.getElementById('studioPanel').classList.add('open');
   document.body.style.overflow='hidden';
+  if(!SUPABASE_READY) showSetupNotice();
 }
 
 function exitStudio(){
   document.getElementById('studioPanel').classList.remove('open');
   document.body.style.overflow='';
-  // clear form
   document.getElementById('epNum').value='';
   document.getElementById('epTitle').value='';
   document.getElementById('epPart').value='';
   document.getElementById('fileName').textContent='';
   document.getElementById('formMsg').textContent='';
-  currentPdfData = null;
+  document.getElementById('pdfInput').value='';
+  currentPdfFile = null;
 }
-
-let currentPdfData = null;
 
 function onFileSelect(input){
   const file = input.files[0];
   if(!file) return;
+  if(file.type !== 'application/pdf'){
+    document.getElementById('formMsg').style.color='#c0614a';
+    document.getElementById('formMsg').textContent='Please select a PDF file only.';
+    input.value='';
+    currentPdfFile=null;
+    return;
+  }
+  currentPdfFile = file;
   document.getElementById('fileName').textContent = file.name;
-  const reader = new FileReader();
-  reader.onload = e => { currentPdfData = e.target.result; };
-  reader.readAsDataURL(file);
 }
 
 // drag styling
@@ -869,46 +919,79 @@ drop.addEventListener('dragenter',()=>drop.classList.add('drag'));
 drop.addEventListener('dragleave',()=>drop.classList.remove('drag'));
 drop.addEventListener('drop',()=>drop.classList.remove('drag'));
 
-function saveEpisode(){
+async function saveEpisode(){
   const num = parseInt(document.getElementById('epNum').value);
   const title = document.getElementById('epTitle').value.trim();
   const part = document.getElementById('epPart').value.trim();
   const msg = document.getElementById('formMsg');
 
+  if(!SUPABASE_READY){ msg.style.color='#c0614a'; msg.textContent='Add your Supabase URL and anon key in the HTML first.'; return; }
   if(!num||num<1){ msg.style.color='#c0614a'; msg.textContent='Please enter a valid episode number.'; return; }
   if(!title){ msg.style.color='#c0614a'; msg.textContent='Please enter a title.'; return; }
-  if(!currentPdfData){ msg.style.color='#c0614a'; msg.textContent='Please select a PDF file.'; return; }
+  if(!currentPdfFile){ msg.style.color='#c0614a'; msg.textContent='Please select a PDF file.'; return; }
 
-  // remove existing with same num
-  episodes = episodes.filter(e=>e.num!==num);
-  episodes.push({ num, title, part, pdfData: currentPdfData });
+  msg.style.color='#e8a96a';
+  msg.textContent='Uploading episode...';
 
-  const ok = saveToStore();
-  if(!ok){
+  const safeName = currentPdfFile.name.replace(/[^a-zA-Z0-9._-]/g,'-').toLowerCase();
+  const pdfPath = `kalindi/episode-${String(num).padStart(2,'0')}-${Date.now()}-${safeName}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from(PDF_BUCKET)
+    .upload(pdfPath, currentPdfFile, {
+      contentType:'application/pdf',
+      upsert:true
+    });
+
+  if(uploadError){
+    console.error(uploadError);
     msg.style.color='#c0614a';
-    msg.textContent='Storage limit reached. PDF may be too large for browser storage.';
-    // still keep in memory for this session
-  } else {
-    msg.style.color='#e8a96a';
-    msg.textContent = `Episode ${num} saved.`;
+    msg.textContent='Upload failed. Check bucket name and storage policy.';
+    return;
   }
 
+  const { error: dbError } = await supabase
+    .from(EPISODES_TABLE)
+    .upsert({ num, title, part, pdf_path: pdfPath }, { onConflict:'num' });
+
+  if(dbError){
+    console.error(dbError);
+    msg.style.color='#c0614a';
+    msg.textContent='PDF uploaded, but episode details were not saved. Check table policy.';
+    return;
+  }
+
+  msg.style.color='#e8a96a';
+  msg.textContent = `Episode ${num} uploaded.`;
+
+  await loadEpisodesFromSupabase();
   renderPublic();
   renderManage();
 
-  // reset form
   document.getElementById('epNum').value='';
   document.getElementById('epTitle').value='';
   document.getElementById('epPart').value='';
   document.getElementById('fileName').textContent='';
   document.getElementById('pdfInput').value='';
-  currentPdfData = null;
+  currentPdfFile = null;
 }
 
-function deleteEpisode(num){
+async function deleteEpisode(num){
   if(!confirm(`Delete Episode ${num}?`)) return;
-  episodes = episodes.filter(e=>e.num!==num);
-  saveToStore();
+  const ep = episodes.find(e=>e.num===num);
+
+  if(SUPABASE_READY){
+    const { error: dbError } = await supabase.from(EPISODES_TABLE).delete().eq('num', num);
+    if(dbError){ alert('Could not delete episode details.'); console.error(dbError); return; }
+    if(ep && ep.pdf_path){
+      const { error: fileError } = await supabase.storage.from(PDF_BUCKET).remove([ep.pdf_path]);
+      if(fileError) console.warn('Episode removed from list, but PDF file removal failed:', fileError);
+    }
+    await loadEpisodesFromSupabase();
+  } else {
+    episodes = episodes.filter(e=>e.num!==num);
+    localStorage.setItem(STORE_KEY, JSON.stringify(episodes));
+  }
   renderPublic();
   renderManage();
 }
@@ -940,6 +1023,17 @@ function scrollToEpisodes(){
 function esc(s){
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
+
+// Make functions available to existing inline onclick/onchange HTML.
+window.scrollToEpisodes = scrollToEpisodes;
+window.openReader = openReader;
+window.closeReader = closeReader;
+window.checkPw = checkPw;
+window.closeGate = closeGate;
+window.exitStudio = exitStudio;
+window.onFileSelect = onFileSelect;
+window.saveEpisode = saveEpisode;
+window.deleteEpisode = deleteEpisode;
 
 // ── INIT ──
 loadEpisodes();
