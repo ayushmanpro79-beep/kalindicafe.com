@@ -283,9 +283,13 @@ footer{
   display:none;
   position:fixed;
   inset:0;
-  background:rgba(8,4,1,0.96);
+  background:
+    radial-gradient(ellipse 90% 60% at 50% 0%, rgba(200,118,58,0.13), transparent 60%),
+    linear-gradient(180deg, rgba(13,8,5,0.98), rgba(8,4,1,0.98));
   z-index:500;
   flex-direction:column;
+  height:100dvh;
+  overflow:hidden;
 }
 .reader-overlay.open{display:flex}
 
@@ -293,35 +297,101 @@ footer{
   display:flex;
   align-items:center;
   justify-content:space-between;
-  padding:0.8rem 1.5rem;
+  gap:1rem;
+  padding:0.75rem clamp(0.8rem,3vw,1.5rem);
   border-bottom:1px solid rgba(200,118,58,0.2);
+  background:rgba(13,8,5,0.86);
+  backdrop-filter:blur(10px);
   flex-shrink:0;
 }
 
 .reader-title{
   font-family:'Cormorant Garamond',Georgia,serif;
   font-style:italic;
-  font-size:1.1rem;
+  font-size:clamp(1rem,4vw,1.25rem);
   color:var(--cream);
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
 }
 
 .reader-close{
-  background:none;
+  background:rgba(200,118,58,0.08);
   border:1px solid rgba(200,118,58,0.35);
   color:var(--amber-light);
   font-family:'Caveat',cursive;
   font-size:1rem;
-  padding:0.3rem 1rem;
+  padding:0.45rem 0.75rem;
   cursor:pointer;
-  transition:background 0.2s;
+  transition:background 0.2s,border-color 0.2s,color 0.2s;
+  border-radius:999px;
+  min-height:38px;
+  flex-shrink:0;
 }
-.reader-close:hover{background:rgba(200,118,58,0.15)}
+.reader-close:hover{background:rgba(200,118,58,0.18);border-color:var(--amber-light);color:#fff}
 
-.reader-frame{
+.reader-stage{
+  position:relative;
   flex:1;
-  width:100%;
-  border:none;
-  background:#1a1108;
+  overflow:auto;
+  -webkit-overflow-scrolling:touch;
+  padding:1.2rem 0 3.2rem;
+  display:flex;
+  justify-content:center;
+  align-items:flex-start;
+}
+
+.reader-paper{
+  width:min(94vw,920px);
+  min-height:55vh;
+  display:flex;
+  justify-content:center;
+  align-items:flex-start;
+}
+
+#pdfCanvas{
+  display:block;
+  max-width:100%;
+  height:auto;
+  background:#f8f1e8;
+  box-shadow:0 20px 70px rgba(0,0,0,0.55),0 0 0 1px rgba(200,118,58,0.18);
+  border-radius:10px;
+}
+
+.reader-loading{
+  position:absolute;
+  inset:auto 1rem 50%;
+  transform:translateY(50%);
+  text-align:center;
+  color:rgba(245,237,224,0.55);
+  font-family:'Caveat',cursive;
+  font-size:1.15rem;
+  pointer-events:none;
+}
+
+.reader-hint-floating{
+  position:absolute;
+  bottom:14px;
+  left:50%;
+  transform:translateX(-50%);
+  font-size:0.75rem;
+  color:rgba(245,237,224,0.32);
+  letter-spacing:0.08em;
+  font-family:'Crimson Text',Georgia,serif;
+  pointer-events:none;
+  user-select:none;
+  opacity:0.9;
+  transition:opacity 1s ease;
+  text-align:center;
+  width:max-content;
+  max-width:92vw;
+}
+
+@media(max-width:640px){
+  .reader-topbar{padding:0.65rem 0.75rem}
+  .reader-stage{padding:0.8rem 0 3.4rem}
+  .reader-paper{width:96vw}
+  #pdfCanvas{border-radius:6px}
 }
 
 /* ══ STUDIO PASSWORD GATE ══ */
@@ -659,7 +729,13 @@ footer{
     <span class="reader-title" id="readerTitle">—</span>
     <button class="reader-close" onclick="closeReader()">✕ Close</button>
   </div>
-  <iframe class="reader-frame" id="readerFrame" src=""></iframe>
+  <div class="reader-stage" id="readerStage">
+    <div class="reader-paper">
+      <canvas id="pdfCanvas"></canvas>
+    </div>
+    <div class="reader-loading" id="readerLoading">Opening the episode…</div>
+    <div class="reader-hint-floating" id="readerHintFloating">Swipe ← → · Arrow keys</div>
+  </div>
 </div>
 
 <!-- ══ STUDIO GATE ══ -->
@@ -711,6 +787,7 @@ footer{
   </div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script type="module">
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
@@ -804,44 +881,182 @@ function renderPublic(){
   `).join('');
 }
 
+
 // ──────────────────────────────────────────────
-// PDF READER
+// CUSTOM PDF.JS READER — Supabase URLs + local fallback
 // ──────────────────────────────────────────────
+let pdfDoc = null;
+let pdfPageNum = 1;
+let pdfRendering = false;
+let pdfPendingPage = null;
+let pdfScale = 1;
+let touchStartX = 0;
+let touchStartY = 0;
+
+if(window.pdfjsLib){
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+}
+
+function dataUrlToUint8Array(dataUrl){
+  const base64 = dataUrl.split(',')[1];
+  const byteStr = atob(base64);
+  const bytes = new Uint8Array(byteStr.length);
+  for(let i=0;i<byteStr.length;i++) bytes[i]=byteStr.charCodeAt(i);
+  return bytes;
+}
+
+async function getEpisodePdfSource(ep){
+  if(ep.pdf_path && SUPABASE_READY){
+    const { data } = supabase.storage.from(PDF_BUCKET).getPublicUrl(ep.pdf_path);
+    return { url:data.publicUrl };
+  }
+
+  // Fallback for older localStorage episodes.
+  if(ep.pdfData){
+    return { data:dataUrlToUint8Array(ep.pdfData) };
+  }
+
+  return null;
+}
+
 async function openReader(num){
   const ep = episodes.find(e=>e.num===num);
   if(!ep){ alert('Episode not found.'); return; }
+  if(!window.pdfjsLib){ alert('Reader could not load. Please check your internet connection.'); return; }
+
+  const source = await getEpisodePdfSource(ep);
+  if(!source){ alert('PDF not found.'); return; }
 
   document.getElementById('readerTitle').textContent = `Ep ${ep.num} — ${ep.title}`;
-  const frame = document.getElementById('readerFrame');
-
-  if(ep.pdf_path && SUPABASE_READY){
-    const { data } = supabase.storage.from(PDF_BUCKET).getPublicUrl(ep.pdf_path);
-    frame.src = data.publicUrl;
-  } else if(ep.pdfData){
-    // Fallback for older localStorage episodes.
-    try{
-      const byteStr = atob(ep.pdfData.split(',')[1]);
-      const bytes = new Uint8Array(byteStr.length);
-      for(let i=0;i<byteStr.length;i++) bytes[i]=byteStr.charCodeAt(i);
-      const blob = new Blob([bytes],{type:'application/pdf'});
-      frame.src = URL.createObjectURL(blob);
-    }catch(e){
-      frame.src = ep.pdfData;
-    }
-  } else {
-    alert('PDF not found.');
-    return;
-  }
-
   document.getElementById('readerOverlay').classList.add('open');
   document.body.style.overflow='hidden';
+
+  const loading = document.getElementById('readerLoading');
+  loading.textContent='Opening the episode…';
+  loading.style.display='block';
+
+  const floatingHint = document.getElementById('readerHintFloating');
+  if(floatingHint){
+    floatingHint.style.opacity = '0.9';
+    clearTimeout(window.readerHintTimer);
+    window.readerHintTimer = setTimeout(()=>{ floatingHint.style.opacity = '0'; }, 3500);
+  }
+
+  try{
+    pdfDoc = await pdfjsLib.getDocument(source).promise;
+    pdfPageNum = 1;
+    fitPdfToScreen();
+  }catch(e){
+    console.error(e);
+    loading.textContent='Could not open this PDF. Check Supabase bucket public access / policies.';
+  }
+}
+
+function renderPdfPage(num){
+  if(!pdfDoc) return;
+  pdfRendering = true;
+  document.getElementById('readerLoading').style.display='block';
+
+  pdfDoc.getPage(num).then(page=>{
+    const canvas = document.getElementById('pdfCanvas');
+    const ctx = canvas.getContext('2d');
+    const viewport = page.getViewport({scale:pdfScale});
+    const outputScale = window.devicePixelRatio || 1;
+
+    canvas.width = Math.floor(viewport.width * outputScale);
+    canvas.height = Math.floor(viewport.height * outputScale);
+    canvas.style.width = Math.floor(viewport.width) + 'px';
+    canvas.style.height = Math.floor(viewport.height) + 'px';
+
+    const transform = outputScale !== 1 ? [outputScale,0,0,outputScale,0,0] : null;
+    return page.render({canvasContext:ctx, viewport, transform}).promise;
+  }).then(()=>{
+    pdfRendering = false;
+    document.getElementById('readerLoading').style.display='none';
+    document.getElementById('readerStage').scrollTo({top:0,left:0,behavior:'smooth'});
+    if(pdfPendingPage !== null){
+      const pending = pdfPendingPage;
+      pdfPendingPage = null;
+      renderPdfPage(pending);
+    }
+  }).catch(e=>{
+    console.error(e);
+    pdfRendering = false;
+    document.getElementById('readerLoading').textContent='Could not render this page.';
+  });
+}
+
+function queuePdfPage(num){
+  if(pdfRendering){ pdfPendingPage = num; return; }
+  renderPdfPage(num);
+}
+
+function prevPdfPage(){
+  if(!pdfDoc || pdfPageNum <= 1) return;
+  pdfPageNum--;
+  queuePdfPage(pdfPageNum);
+}
+
+function nextPdfPage(){
+  if(!pdfDoc || pdfPageNum >= pdfDoc.numPages) return;
+  pdfPageNum++;
+  queuePdfPage(pdfPageNum);
+}
+
+function fitPdfToScreen(){
+  if(!pdfDoc) return;
+  pdfDoc.getPage(pdfPageNum).then(page=>{
+    const readerStage = document.getElementById('readerStage');
+    const baseViewport = page.getViewport({scale:1});
+    const availableWidth = Math.min(readerStage.clientWidth * 0.94, 920);
+    pdfScale = Math.max(0.45, Math.min(2.2, availableWidth / baseViewport.width));
+    queuePdfPage(pdfPageNum);
+  });
 }
 
 function closeReader(){
   document.getElementById('readerOverlay').classList.remove('open');
-  document.getElementById('readerFrame').src='';
   document.body.style.overflow='';
+  const canvas = document.getElementById('pdfCanvas');
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  pdfDoc = null;
+  pdfPageNum = 1;
+  pdfPendingPage = null;
 }
+
+const readerStage = document.getElementById('readerStage');
+readerStage.addEventListener('touchstart',e=>{
+  if(!e.touches.length) return;
+  touchStartX = e.touches[0].clientX;
+  touchStartY = e.touches[0].clientY;
+},{passive:true});
+
+readerStage.addEventListener('touchend',e=>{
+  if(!e.changedTouches.length) return;
+  const dx = e.changedTouches[0].clientX - touchStartX;
+  const dy = e.changedTouches[0].clientY - touchStartY;
+  if(Math.abs(dx) > 55 && Math.abs(dx) > Math.abs(dy) * 1.4){
+    dx < 0 ? nextPdfPage() : prevPdfPage();
+  }
+},{passive:true});
+
+document.addEventListener('keydown',e=>{
+  if(!document.getElementById('readerOverlay').classList.contains('open')) return;
+  if(e.key === 'ArrowRight'){
+    e.preventDefault();
+    nextPdfPage();
+  }
+  if(e.key === 'ArrowLeft'){
+    e.preventDefault();
+    prevPdfPage();
+  }
+});
+
+window.addEventListener('resize',()=>{
+  if(document.getElementById('readerOverlay').classList.contains('open')) fitPdfToScreen();
+});
+
 
 // ──────────────────────────────────────────────
 // STUDIO GATE — unchanged behavior: click logo 5 times, then password
@@ -1034,6 +1249,24 @@ window.exitStudio = exitStudio;
 window.onFileSelect = onFileSelect;
 window.saveEpisode = saveEpisode;
 window.deleteEpisode = deleteEpisode;
+
+
+// ──────────────────────────────────────────────
+// Expose module functions for inline onclick handlers
+// ──────────────────────────────────────────────
+Object.assign(window, {
+  scrollToEpisodes,
+  openReader,
+  closeReader,
+  openGate,
+  closeGate,
+  checkPw,
+  openStudio,
+  exitStudio,
+  onFileSelect,
+  saveEpisode,
+  deleteEpisode
+});
 
 // ── INIT ──
 loadEpisodes();
