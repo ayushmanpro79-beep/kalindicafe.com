@@ -266,6 +266,46 @@ body{
   font-size:1rem;
 }
 
+
+
+/* ── CHARACTERS SECTION ── */
+.hero-actions{display:flex;gap:0.8rem;justify-content:center;flex-wrap:wrap;align-items:center}
+.hero-cta.secondary{background:rgba(245,237,224,0.06);border-color:rgba(245,237,224,0.22);color:rgba(245,237,224,0.78)}
+.hero-cta.secondary:hover{background:rgba(200,118,58,0.12);border-color:var(--amber-light);color:#fff}
+.characters-section{background:#0d0805;padding:0 clamp(1.2rem,6vw,5rem) 5rem}
+.character-grid{max-width:980px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1.1rem}
+.character-card{background:rgba(245,237,224,0.035);border:1px solid rgba(200,118,58,0.16);padding:1rem;cursor:pointer;transition:transform .2s,background .2s,border-color .2s}
+.character-card:hover{transform:translateY(-3px);background:rgba(200,118,58,0.055);border-color:rgba(200,118,58,0.32)}
+.character-thumb{aspect-ratio:1/1;border:1px solid rgba(200,118,58,0.18);background:rgba(245,237,224,0.04);display:flex;align-items:center;justify-content:center;overflow:hidden;margin-bottom:0.9rem;color:rgba(245,237,224,0.32);font-family:'Caveat',cursive;font-size:1.05rem;text-align:center;padding:1rem}
+.character-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.character-name{font-family:'Cormorant Garamond',Georgia,serif;font-size:1.35rem;font-weight:300;color:var(--cream);font-style:italic;line-height:1.1;margin-bottom:0.25rem}
+.character-role{font-size:0.76rem;letter-spacing:0.1em;text-transform:uppercase;color:rgba(200,118,58,0.72);margin-bottom:0.55rem}
+.character-preview{font-size:0.95rem;line-height:1.5;color:rgba(245,237,224,0.48);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.character-modal{display:none;position:fixed;inset:0;background:rgba(8,4,1,0.96);z-index:550;align-items:center;justify-content:center;padding:1rem;overflow-y:auto}
+.character-modal.open{display:flex}
+.character-modal-card{width:min(940px,96vw);max-height:92vh;overflow:auto;background:#110b05;border:1px solid rgba(200,118,58,0.28);box-shadow:0 25px 90px rgba(0,0,0,.5);padding:1.1rem}
+.character-modal-top{display:flex;justify-content:space-between;align-items:center;gap:1rem;border-bottom:1px solid rgba(200,118,58,0.16);padding-bottom:0.8rem;margin-bottom:1rem}
+.character-modal-top h2{font-family:'Cormorant Garamond',Georgia,serif;font-weight:300;font-style:italic;font-size:clamp(1.5rem,4vw,2.2rem)}
+.character-modal-close{background:none;border:1px solid rgba(200,118,58,0.35);color:var(--amber-light);padding:0.35rem 0.8rem;font-family:'Caveat',cursive;font-size:1rem;cursor:pointer}
+.character-modal-body{display:grid;grid-template-columns:minmax(220px,360px) 1fr;gap:1.3rem;align-items:start}
+.character-modal-image{border:1px solid rgba(200,118,58,0.18);background:rgba(245,237,224,0.04);min-height:260px;display:flex;align-items:center;justify-content:center;color:rgba(245,237,224,0.32);font-family:'Caveat',cursive;font-size:1.1rem;text-align:center;padding:1rem}
+.character-modal-image img{width:100%;height:auto;display:block}
+.character-modal-text{white-space:pre-wrap;font-size:1.05rem;line-height:1.75;color:rgba(245,237,224,0.72)}
+@media(max-width:720px){.character-modal-body{grid-template-columns:1fr}.hero-actions{flex-direction:column}.hero-cta{width:min(280px,92vw)}}
+
+/* ══ STUDIO CHOICE + CHARACTER MANAGEMENT ══ */
+.studio-choice{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:2rem}
+.choice-card{background:rgba(245,237,224,0.035);border:1px solid rgba(200,118,58,0.18);padding:1.5rem;cursor:pointer;transition:background .2s,border-color .2s,transform .2s;text-align:left;color:var(--cream)}
+.choice-card:hover{background:rgba(200,118,58,0.07);border-color:rgba(200,118,58,0.42);transform:translateY(-2px)}
+.choice-card h2{font-family:'Cormorant Garamond',Georgia,serif;font-style:italic;font-weight:300;font-size:1.5rem;margin-bottom:.35rem}
+.choice-card p{font-size:.9rem;color:rgba(245,237,224,.4);line-height:1.45}
+.studio-tab{display:none}.studio-tab.active{display:block}
+.back-choice{background:none;border:none;color:rgba(245,237,224,.35);font-family:'Crimson Text',Georgia,serif;font-size:.95rem;cursor:pointer;margin-bottom:1rem}.back-choice:hover{color:var(--amber-light)}
+.s-textarea{width:100%;min-height:150px;resize:vertical;background:rgba(245,237,224,0.05);border:1px solid rgba(200,118,58,0.2);color:var(--cream);font-family:'Crimson Text',Georgia,serif;font-size:1rem;padding:.7rem .8rem;outline:none;transition:border-color .2s}.s-textarea:focus{border-color:var(--amber)}
+.studio-actions{display:flex;gap:.65rem;flex-wrap:wrap;align-items:center}.s-submit.ghost{background:transparent;color:rgba(245,237,224,.42);border-color:rgba(245,237,224,.14)}.s-submit.ghost:hover{background:rgba(245,237,224,.06);color:var(--cream)}
+.manage-actions{display:flex;gap:.45rem;flex-shrink:0}.manage-edit{background:none;border:1px solid rgba(200,118,58,.28);color:rgba(232,169,106,.85);font-size:.78rem;padding:.2rem .6rem;cursor:pointer;font-family:'Crimson Text',serif}.manage-edit:hover{background:rgba(200,118,58,.12);color:#fff}
+@media(max-width:600px){.studio-choice{grid-template-columns:1fr}.manage-item{align-items:flex-start;flex-wrap:wrap}.manage-actions{width:100%;justify-content:flex-end}}
+
 /* ── FOOTER ── */
 footer{
   text-align:center;
@@ -697,7 +737,10 @@ footer{
     <span class="tagline">coffee · conversations · comfort</span>
     <h1 class="site-title" id="logoClick">Kalindi's</h1>
     <p class="site-sub">A serialised novel from Hyderabad</p>
-    <button class="hero-cta" onclick="scrollToEpisodes()">Read the Story ↓</button>
+    <div class="hero-actions">
+      <button class="hero-cta" onclick="scrollToEpisodes()">Read the Story ↓</button>
+      <button class="hero-cta secondary" onclick="scrollToCharacters()">Meet the Characters →</button>
+    </div>
   </div>
 </section>
 
@@ -722,6 +765,8 @@ footer{
 <footer>
   <span>Kalindi's &nbsp;·&nbsp; The Smell of Somewhere New</span>
 </footer>
+
+
 
 <!-- ══ PDF READER ══ -->
 <div class="reader-overlay" id="readerOverlay">
@@ -758,31 +803,82 @@ footer{
   </div>
   <div class="studio-body">
 
-    <p class="studio-section-title">Add an Episode</p>
-    <div class="upload-form">
-      <div class="form-row">
-        <div>
-          <label class="s-label">Episode No.</label>
-          <input class="s-input" type="number" id="epNum" min="1" placeholder="e.g. 9"/>
-        </div>
-        <div>
-          <label class="s-label">Title</label>
-          <input class="s-input" type="text" id="epTitle" placeholder="e.g. The Road Back"/>
-        </div>
-      </div>
-      <label class="s-label" style="margin-bottom:0.4rem">Part / Subtitle (optional)</label>
-      <input class="s-input" type="text" id="epPart" placeholder="e.g. Part Nine — Monsoon" style="margin-bottom:0.8rem"/>
-      <div class="file-drop" id="fileDrop">
-        <input type="file" accept="application/pdf" id="pdfInput" onchange="onFileSelect(this)"/>
-        <p class="file-drop-text">Click or drag a PDF here</p>
-        <p class="file-name" id="fileName"></p>
-      </div>
-      <button class="s-submit" onclick="saveEpisode()">Save Episode</button>
-      <div class="form-msg" id="formMsg"></div>
+    <div id="studioChoice" class="studio-choice">
+      <button class="choice-card" onclick="showStudioTab('episodes')">
+        <h2>Episode Management</h2>
+        <p>Upload PDFs, publish episodes, and manage the story list.</p>
+      </button>
+      <button class="choice-card" onclick="showStudioTab('characters')">
+        <h2>Character Management</h2>
+        <p>Add character art, lore, and edit revealed character cards.</p>
+      </button>
     </div>
 
-    <p class="studio-section-title">Manage Episodes</p>
-    <div class="manage-list" id="manageList"></div>
+    <div id="episodeStudio" class="studio-tab">
+      <button class="back-choice" onclick="backToStudioChoice()">← Back to Studio Options</button>
+      <p class="studio-section-title">Add an Episode</p>
+      <div class="upload-form">
+        <div class="form-row">
+          <div>
+            <label class="s-label">Episode No.</label>
+            <input class="s-input" type="number" id="epNum" min="1" placeholder="e.g. 9"/>
+          </div>
+          <div>
+            <label class="s-label">Title</label>
+            <input class="s-input" type="text" id="epTitle" placeholder="e.g. The Road Back"/>
+          </div>
+        </div>
+        <label class="s-label" style="margin-bottom:0.4rem">Part / Subtitle (optional)</label>
+        <input class="s-input" type="text" id="epPart" placeholder="e.g. Part Nine — Monsoon" style="margin-bottom:0.8rem"/>
+        <div class="file-drop" id="fileDrop">
+          <input type="file" accept="application/pdf" id="pdfInput" onchange="onFileSelect(this)"/>
+          <p class="file-drop-text">Click or drag a PDF here</p>
+          <p class="file-name" id="fileName"></p>
+        </div>
+        <button class="s-submit" onclick="saveEpisode()">Save Episode</button>
+        <div class="form-msg" id="formMsg"></div>
+      </div>
+
+      <p class="studio-section-title">Manage Episodes</p>
+      <div class="manage-list" id="manageList"></div>
+    </div>
+
+    <div id="characterStudio" class="studio-tab">
+      <button class="back-choice" onclick="backToStudioChoice()">← Back to Studio Options</button>
+      <p class="studio-section-title" id="charFormTitle">Add a Character</p>
+      <div class="upload-form">
+        <input type="hidden" id="charId"/>
+        <div class="form-row">
+          <div>
+            <label class="s-label">Display Order</label>
+            <input class="s-input" type="number" id="charOrder" min="0" placeholder="e.g. 1"/>
+          </div>
+          <div>
+            <label class="s-label">Character Name</label>
+            <input class="s-input" type="text" id="charName" placeholder="e.g. Ayansh Gouda"/>
+          </div>
+        </div>
+        <label class="s-label">Role / Small Tagline</label>
+        <input class="s-input" type="text" id="charRole" placeholder="e.g. Senior Developer · Old soul" style="margin-bottom:0.8rem"/>
+        <label class="s-label">Writing / Lore</label>
+        <textarea class="s-textarea" id="charLore" placeholder="Write the character background, personality, story role, or revealed lore here..." style="margin-bottom:0.8rem"></textarea>
+        <div class="file-drop" id="charFileDrop">
+          <input type="file" accept="image/png,image/jpeg,image/jpg" id="charImageInput" onchange="onCharacterImageSelect(this)"/>
+          <p class="file-drop-text">Click or drag PNG / JPG / JPEG art here</p>
+          <p class="file-name" id="charFileName"></p>
+        </div>
+        <div class="studio-actions">
+          <button class="s-submit" onclick="saveCharacter()">Save Character</button>
+          <button class="s-submit ghost" onclick="removeCharacterImage()" type="button">Remove Image Only</button>
+          <button class="s-submit ghost" onclick="clearCharacterWriting()" type="button">Clear Writing</button>
+          <button class="s-submit ghost" onclick="resetCharacterForm()" type="button">New Character</button>
+        </div>
+        <div class="form-msg" id="charFormMsg"></div>
+      </div>
+
+      <p class="studio-section-title">Manage Characters</p>
+      <div class="manage-list" id="characterManageList"></div>
+    </div>
 
   </div>
 </div>
@@ -805,6 +901,8 @@ const PDF_BUCKET = 'novel-pdfs';
 
 // STEP 3: Keep this table name same as the table you create in Supabase Database.
 const EPISODES_TABLE = 'episodes';
+const CHARACTERS_TABLE = 'characters';
+const CHARACTER_BUCKET = 'character-art';
 
 const SUPABASE_READY = SUPABASE_URL.startsWith('https://') && SUPABASE_ANON_KEY.length > 40;
 const supabase = SUPABASE_READY ? createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
@@ -814,7 +912,10 @@ const STORE_KEY = 'kalindis_episodes';
 
 // ── Episodes in memory ──
 let episodes = [];
+let characters = [];
 let currentPdfFile = null;
+let currentCharacterImageFile = null;
+let editingCharacterImagePath = null;
 
 // ──────────────────────────────────────────────
 // LOAD episodes on page start
@@ -822,12 +923,15 @@ let currentPdfFile = null;
 async function loadEpisodes(){
   if(SUPABASE_READY){
     await loadEpisodesFromSupabase();
+    await loadCharactersFromSupabase();
   } else {
     loadEpisodesFromLocalStorage();
     showSetupNotice();
   }
   renderPublic();
   renderManage();
+  renderCharactersPublic();
+  renderCharacterManage();
 }
 
 async function loadEpisodesFromSupabase(){
@@ -879,6 +983,76 @@ function renderPublic(){
       <span class="ep-arrow">→</span>
     </div>
   `).join('');
+}
+
+
+
+// ──────────────────────────────────────────────
+// PUBLIC CHARACTER CARDS
+// ──────────────────────────────────────────────
+async function loadCharactersFromSupabase(){
+  const { data, error } = await supabase
+    .from(CHARACTERS_TABLE)
+    .select('id,name,role,lore,image_path,sort_order,is_visible')
+    .eq('is_visible', true)
+    .order('sort_order', { ascending:true })
+    .order('created_at', { ascending:true });
+
+  if(error){
+    console.error(error);
+    characters = [];
+    return;
+  }
+  characters = data || [];
+}
+
+function getCharacterImageUrl(character){
+  if(!character || !character.image_path || !SUPABASE_READY) return '';
+  const { data } = supabase.storage.from(CHARACTER_BUCKET).getPublicUrl(character.image_path);
+  return data.publicUrl;
+}
+
+function renderCharactersPublic(){
+  const grid = document.getElementById('characterGrid');
+  if(!grid) return;
+  const visible = characters.filter(c => (c.image_path && c.image_path.trim()) || (c.lore && c.lore.trim()));
+  if(!visible.length){
+    grid.innerHTML = '<div class="ep-empty">No characters revealed yet.</div>';
+    return;
+  }
+  grid.innerHTML = visible.map(c=>{
+    const imgUrl = getCharacterImageUrl(c);
+    const lore = (c.lore || '').trim();
+    return `
+      <div class="character-card" onclick="openCharacterModal('${escAttr(c.id)}')">
+        <div class="character-thumb">${imgUrl ? `<img src="${escAttr(imgUrl)}" alt="${escAttr(c.name || 'Character art')}">` : 'Image not available'}</div>
+        <h3 class="character-name">${esc(c.name || 'Unnamed Character')}</h3>
+        ${c.role ? `<div class="character-role">${esc(c.role)}</div>` : ''}
+        <p class="character-preview">${lore ? esc(lore) : 'Nothing written.'}</p>
+      </div>
+    `;
+  }).join('');
+}
+
+function openCharacterModal(id){
+  const c = characters.find(x=>x.id===id);
+  if(!c) return;
+  const imgUrl = getCharacterImageUrl(c);
+  document.getElementById('characterModalName').textContent = c.name || 'Unnamed Character';
+  document.getElementById('characterModalRole').textContent = c.role || '';
+  document.getElementById('characterModalImage').innerHTML = imgUrl ? `<img src="${escAttr(imgUrl)}" alt="${escAttr(c.name || 'Character art')}">` : 'Image not available';
+  document.getElementById('characterModalText').textContent = (c.lore && c.lore.trim()) ? c.lore : 'Nothing written.';
+  document.getElementById('characterModal').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+
+function closeCharacterModal(){
+  document.getElementById('characterModal').classList.remove('open');
+  document.body.style.overflow='';
+}
+
+function scrollToCharacters(){
+  window.location.href = 'characters.html';
 }
 
 
@@ -1096,7 +1270,9 @@ function checkPw(){
 // STUDIO PANEL
 // ──────────────────────────────────────────────
 function openStudio(){
+  backToStudioChoice();
   renderManage();
+  renderCharacterManage();
   document.getElementById('studioPanel').classList.add('open');
   document.body.style.overflow='hidden';
   if(!SUPABASE_READY) showSetupNotice();
@@ -1112,6 +1288,22 @@ function exitStudio(){
   document.getElementById('formMsg').textContent='';
   document.getElementById('pdfInput').value='';
   currentPdfFile = null;
+  resetCharacterForm();
+}
+
+function showStudioTab(tab){
+  document.getElementById('studioChoice').style.display='none';
+  document.getElementById('episodeStudio').classList.toggle('active', tab === 'episodes');
+  document.getElementById('characterStudio').classList.toggle('active', tab === 'characters');
+  if(tab === 'characters') renderCharacterManage();
+  if(tab === 'episodes') renderManage();
+}
+
+function backToStudioChoice(){
+  const choice = document.getElementById('studioChoice');
+  if(choice) choice.style.display='grid';
+  document.getElementById('episodeStudio')?.classList.remove('active');
+  document.getElementById('characterStudio')?.classList.remove('active');
 }
 
 function onFileSelect(input){
@@ -1133,6 +1325,10 @@ const drop = document.getElementById('fileDrop');
 drop.addEventListener('dragenter',()=>drop.classList.add('drag'));
 drop.addEventListener('dragleave',()=>drop.classList.remove('drag'));
 drop.addEventListener('drop',()=>drop.classList.remove('drag'));
+const charDrop = document.getElementById('charFileDrop');
+charDrop.addEventListener('dragenter',()=>charDrop.classList.add('drag'));
+charDrop.addEventListener('dragleave',()=>charDrop.classList.remove('drag'));
+charDrop.addEventListener('drop',()=>charDrop.classList.remove('drag'));
 
 async function saveEpisode(){
   const num = parseInt(document.getElementById('epNum').value);
@@ -1228,6 +1424,194 @@ function renderManage(){
   `).join('');
 }
 
+
+// ──────────────────────────────────────────────
+// CHARACTER MANAGEMENT
+// ──────────────────────────────────────────────
+function onCharacterImageSelect(input){
+  const file = input.files[0];
+  const msg = document.getElementById('charFormMsg');
+  if(!file) return;
+  const okTypes = ['image/png','image/jpeg','image/jpg'];
+  const okExt = /\.(png|jpe?g)$/i.test(file.name);
+  if(!okTypes.includes(file.type) && !okExt){
+    msg.style.color='#c0614a';
+    msg.textContent='Please select PNG, JPG, or JPEG image only.';
+    input.value='';
+    currentCharacterImageFile = null;
+    return;
+  }
+  currentCharacterImageFile = file;
+  document.getElementById('charFileName').textContent = file.name;
+  msg.textContent='';
+}
+
+async function saveCharacter(){
+  const id = document.getElementById('charId').value.trim();
+  const name = document.getElementById('charName').value.trim();
+  const role = document.getElementById('charRole').value.trim();
+  const lore = document.getElementById('charLore').value.trim();
+  const sort_order = parseInt(document.getElementById('charOrder').value) || 0;
+  const msg = document.getElementById('charFormMsg');
+
+  if(!SUPABASE_READY){ msg.style.color='#c0614a'; msg.textContent='Supabase is not configured.'; return; }
+  if(!name){ msg.style.color='#c0614a'; msg.textContent='Please enter a character name.'; return; }
+
+  msg.style.color='#e8a96a';
+  msg.textContent='Saving character...';
+
+  let image_path = editingCharacterImagePath || null;
+  if(currentCharacterImageFile){
+    const safeName = currentCharacterImageFile.name.replace(/[^a-zA-Z0-9._-]/g,'-').toLowerCase();
+    image_path = `kalindi/${name.replace(/[^a-zA-Z0-9._-]/g,'-').toLowerCase()}-${Date.now()}-${safeName}`;
+    const { error: uploadError } = await supabase.storage
+      .from(CHARACTER_BUCKET)
+      .upload(image_path, currentCharacterImageFile, { contentType: currentCharacterImageFile.type || 'image/jpeg', upsert:true });
+    if(uploadError){
+      console.error(uploadError);
+      msg.style.color='#c0614a';
+      msg.textContent='Image upload failed. Check character-art bucket policy.';
+      return;
+    }
+    if(editingCharacterImagePath && editingCharacterImagePath !== image_path){
+      await supabase.storage.from(CHARACTER_BUCKET).remove([editingCharacterImagePath]);
+    }
+  }
+
+  const payload = { name, role, lore, image_path, sort_order, is_visible:true };
+  const query = id
+    ? supabase.from(CHARACTERS_TABLE).update(payload).eq('id', id)
+    : supabase.from(CHARACTERS_TABLE).insert(payload);
+  const { error } = await query;
+  if(error){
+    console.error(error);
+    msg.style.color='#c0614a';
+    msg.textContent='Character details were not saved. Check table policies.';
+    return;
+  }
+
+  msg.style.color='#e8a96a';
+  msg.textContent = id ? 'Character updated.' : 'Character added.';
+  await loadCharactersFromSupabase();
+  renderCharactersPublic();
+  renderCharacterManage();
+  resetCharacterForm(false);
+}
+
+function editCharacter(id){
+  const c = characters.find(x=>x.id===id);
+  if(!c) return;
+  document.getElementById('charFormTitle').textContent = `Edit ${c.name || 'Character'}`;
+  document.getElementById('charId').value = c.id;
+  document.getElementById('charOrder').value = c.sort_order || 0;
+  document.getElementById('charName').value = c.name || '';
+  document.getElementById('charRole').value = c.role || '';
+  document.getElementById('charLore').value = c.lore || '';
+  editingCharacterImagePath = c.image_path || null;
+  currentCharacterImageFile = null;
+  document.getElementById('charImageInput').value='';
+  document.getElementById('charFileName').textContent = c.image_path ? 'Existing image attached' : 'Image not available';
+  document.getElementById('charFormMsg').textContent='Editing existing character.';
+  document.getElementById('charFormMsg').style.color='#e8a96a';
+  document.getElementById('characterStudio').scrollTo?.({top:0,behavior:'smooth'});
+}
+
+function resetCharacterForm(clearMsg=true){
+  const ids = ['charId','charOrder','charName','charRole','charLore','charFileName'];
+  ids.forEach(id=>{ const el=document.getElementById(id); if(el) el.value !== undefined ? el.value='' : el.textContent=''; });
+  const title = document.getElementById('charFormTitle');
+  if(title) title.textContent='Add a Character';
+  const input = document.getElementById('charImageInput');
+  if(input) input.value='';
+  currentCharacterImageFile = null;
+  editingCharacterImagePath = null;
+  if(clearMsg){ const msg=document.getElementById('charFormMsg'); if(msg) msg.textContent=''; }
+}
+
+async function removeCharacterImage(){
+  const id = document.getElementById('charId').value.trim();
+  const lore = document.getElementById('charLore').value.trim();
+  const msg = document.getElementById('charFormMsg');
+  currentCharacterImageFile = null;
+  document.getElementById('charImageInput').value='';
+  document.getElementById('charFileName').textContent='Image not available';
+  if(!id){
+    editingCharacterImagePath = null;
+    msg.style.color='#e8a96a';
+    msg.textContent='Image removed from this unsaved form.';
+    return;
+  }
+  const oldPath = editingCharacterImagePath;
+  const c = characters.find(x=>x.id===id);
+  if(!lore && c && !(c.lore || '').trim()){
+    await deleteCharacter(id, true);
+    return;
+  }
+  const { error } = await supabase.from(CHARACTERS_TABLE).update({ image_path:null }).eq('id', id);
+  if(error){ msg.style.color='#c0614a'; msg.textContent='Could not remove image.'; console.error(error); return; }
+  if(oldPath) await supabase.storage.from(CHARACTER_BUCKET).remove([oldPath]);
+  editingCharacterImagePath = null;
+  await loadCharactersFromSupabase();
+  renderCharactersPublic();
+  renderCharacterManage();
+  msg.style.color='#e8a96a';
+  msg.textContent='Image removed. Card will show “Image not available”.';
+}
+
+async function clearCharacterWriting(){
+  const id = document.getElementById('charId').value.trim();
+  const msg = document.getElementById('charFormMsg');
+  document.getElementById('charLore').value='';
+  if(!id){ msg.style.color='#e8a96a'; msg.textContent='Writing cleared from this unsaved form.'; return; }
+  const c = characters.find(x=>x.id===id);
+  if(c && !(c.image_path || '').trim() && !editingCharacterImagePath && !currentCharacterImageFile){
+    await deleteCharacter(id, true);
+    return;
+  }
+  const { error } = await supabase.from(CHARACTERS_TABLE).update({ lore:'' }).eq('id', id);
+  if(error){ msg.style.color='#c0614a'; msg.textContent='Could not clear writing.'; console.error(error); return; }
+  await loadCharactersFromSupabase();
+  renderCharactersPublic();
+  renderCharacterManage();
+  msg.style.color='#e8a96a';
+  msg.textContent='Writing cleared. Card will show “Nothing written.”';
+}
+
+async function deleteCharacter(id, silent=false){
+  const c = characters.find(x=>x.id===id);
+  if(!c) return;
+  if(!silent && !confirm(`Delete ${c.name || 'this character'}?`)) return;
+  const { error } = await supabase.from(CHARACTERS_TABLE).delete().eq('id', id);
+  if(error){ alert('Could not delete character.'); console.error(error); return; }
+  if(c.image_path) await supabase.storage.from(CHARACTER_BUCKET).remove([c.image_path]);
+  await loadCharactersFromSupabase();
+  renderCharactersPublic();
+  renderCharacterManage();
+  resetCharacterForm(false);
+  const msg = document.getElementById('charFormMsg');
+  if(msg){ msg.style.color='#e8a96a'; msg.textContent='Character card deleted.'; }
+}
+
+function renderCharacterManage(){
+  const list = document.getElementById('characterManageList');
+  if(!list) return;
+  if(!characters.length){
+    list.innerHTML='<p class="manage-empty">No characters yet.</p>';
+    return;
+  }
+  list.innerHTML = [...characters].sort((a,b)=>(a.sort_order||0)-(b.sort_order||0)).map(c=>`
+    <div class="manage-item">
+      <span class="manage-num">${c.sort_order || 0}</span>
+      <span class="manage-name">${esc(c.name || 'Unnamed Character')}</span>
+      <div class="manage-actions">
+        <button class="manage-edit" onclick="editCharacter('${escAttr(c.id)}')">Edit</button>
+        <button class="manage-del" onclick="deleteCharacter('${escAttr(c.id)}')">Delete</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+
 // ──────────────────────────────────────────────
 // HELPERS
 // ──────────────────────────────────────────────
@@ -1237,6 +1621,10 @@ function scrollToEpisodes(){
 
 function esc(s){
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function escAttr(s){
+  return esc(s).replace(/'/g,'&#39;');
 }
 
 // Make functions available to existing inline onclick/onchange HTML.
@@ -1249,6 +1637,8 @@ window.exitStudio = exitStudio;
 window.onFileSelect = onFileSelect;
 window.saveEpisode = saveEpisode;
 window.deleteEpisode = deleteEpisode;
+window.scrollToCharacters = scrollToCharacters;
+window.closeCharacterModal = closeCharacterModal;
 
 
 // ──────────────────────────────────────────────
@@ -1265,7 +1655,19 @@ Object.assign(window, {
   exitStudio,
   onFileSelect,
   saveEpisode,
-  deleteEpisode
+  deleteEpisode,
+  scrollToCharacters,
+  openCharacterModal,
+  closeCharacterModal,
+  showStudioTab,
+  backToStudioChoice,
+  onCharacterImageSelect,
+  saveCharacter,
+  editCharacter,
+  deleteCharacter,
+  removeCharacterImage,
+  clearCharacterWriting,
+  resetCharacterForm
 });
 
 // ── INIT ──
