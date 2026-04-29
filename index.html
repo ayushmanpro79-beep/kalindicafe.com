@@ -333,8 +333,32 @@ body{
 .character-modal-text{white-space:pre-wrap;font-size:1.05rem;line-height:1.75;color:rgba(245,237,224,0.72)}
 @media(max-width:720px){.character-modal-body{grid-template-columns:1fr}.hero-actions{flex-direction:column}.hero-cta{width:min(280px,92vw)}}
 
+
+
+/* ── ARTWORK PAGE / CARDS ── */
+.artwork-section{background:#0d0805;padding:0 clamp(1.2rem,6vw,5rem) 5rem}
+.artwork-grid{max-width:1080px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:1.1rem}
+.artwork-card{background:rgba(245,237,224,0.035);border:1px solid rgba(200,118,58,0.16);padding:0.85rem;cursor:pointer;transition:transform .2s,background .2s,border-color .2s}
+.artwork-card:hover{transform:translateY(-3px);background:rgba(200,118,58,0.055);border-color:rgba(200,118,58,0.32)}
+.artwork-thumb{aspect-ratio:1/1.35;border:1px solid rgba(200,118,58,0.18);background:rgba(245,237,224,0.04);display:flex;align-items:center;justify-content:center;overflow:hidden;margin-bottom:0.8rem;color:rgba(245,237,224,0.32);font-family:'Caveat',cursive;font-size:1.05rem;text-align:center;padding:0.65rem}
+.artwork-thumb img{width:100%;height:100%;object-fit:contain;display:block}
+.artwork-title{font-family:'Cormorant Garamond',Georgia,serif;font-size:1.22rem;font-weight:300;color:var(--cream);font-style:italic;line-height:1.1;margin-bottom:0.25rem}
+.artwork-tag{font-size:0.72rem;letter-spacing:0.1em;text-transform:uppercase;color:rgba(200,118,58,0.72);margin-bottom:0.45rem}
+.artwork-preview{font-size:0.9rem;line-height:1.45;color:rgba(245,237,224,0.48);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.artwork-modal{display:none;position:fixed;inset:0;background:rgba(8,4,1,0.97);z-index:560;align-items:center;justify-content:center;padding:1rem;overflow-y:auto}
+.artwork-modal.open{display:flex}
+.artwork-modal-card{width:min(1020px,96vw);max-height:92vh;overflow:auto;background:#110b05;border:1px solid rgba(200,118,58,0.28);box-shadow:0 25px 90px rgba(0,0,0,.5);padding:1.1rem}
+.artwork-modal-top{display:flex;justify-content:space-between;align-items:center;gap:1rem;border-bottom:1px solid rgba(200,118,58,0.16);padding-bottom:0.8rem;margin-bottom:1rem}
+.artwork-modal-top h2{font-family:'Cormorant Garamond',Georgia,serif;font-weight:300;font-style:italic;font-size:clamp(1.5rem,4vw,2.2rem)}
+.artwork-modal-close{background:none;border:1px solid rgba(200,118,58,0.35);color:var(--amber-light);padding:0.35rem 0.8rem;font-family:'Caveat',cursive;font-size:1rem;cursor:pointer}
+.artwork-modal-body{display:grid;grid-template-columns:minmax(240px,430px) 1fr;gap:1.3rem;align-items:start}
+.artwork-modal-image{border:1px solid rgba(200,118,58,0.18);background:rgba(245,237,224,0.04);min-height:320px;display:flex;align-items:center;justify-content:center;color:rgba(245,237,224,0.32);font-family:'Caveat',cursive;font-size:1.1rem;text-align:center;padding:0.8rem}
+.artwork-modal-image img{max-width:100%;max-height:76vh;width:auto;height:auto;object-fit:contain;display:block}
+.artwork-modal-text{white-space:pre-wrap;font-size:1.05rem;line-height:1.75;color:rgba(245,237,224,0.72)}
+@media(max-width:720px){.artwork-modal-body{grid-template-columns:1fr}.artwork-grid{grid-template-columns:repeat(auto-fit,minmax(155px,1fr))}.artwork-modal-image{min-height:240px}}
+
 /* ══ STUDIO CHOICE + CHARACTER MANAGEMENT ══ */
-.studio-choice{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:2rem}
+.studio-choice{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:1rem;margin-bottom:2rem}
 .choice-card{background:rgba(245,237,224,0.035);border:1px solid rgba(200,118,58,0.18);padding:1.5rem;cursor:pointer;transition:background .2s,border-color .2s,transform .2s;text-align:left;color:var(--cream)}
 .choice-card:hover{background:rgba(200,118,58,0.07);border-color:rgba(200,118,58,0.42);transform:translateY(-2px)}
 .choice-card h2{font-family:'Cormorant Garamond',Georgia,serif;font-style:italic;font-weight:300;font-size:1.5rem;margin-bottom:.35rem}
@@ -816,6 +840,7 @@ footer a:hover{color:var(--amber-light)}
     <div class="hero-actions">
       <button class="hero-cta" onclick="scrollToEpisodes()">Read the Story ↓</button>
       <button class="hero-cta secondary" onclick="scrollToCharacters()">Meet the Characters →</button>
+      <button class="hero-cta secondary" onclick="openArtworkPage()">View Artwork →</button>
     </div>
   </div>
 </section>
@@ -856,6 +881,8 @@ footer a:hover{color:var(--amber-light)}
   <a href="about.html">About the Story</a>
   <span>&nbsp;·&nbsp;</span>
   <a href="characters.html">Characters</a>
+  <span>&nbsp;·&nbsp;</span>
+  <a href="artwork.html">Artwork</a>
 </footer>
 
 
@@ -903,6 +930,10 @@ footer a:hover{color:var(--amber-light)}
       <button class="choice-card" onclick="showStudioTab('characters')">
         <h2>Character Management</h2>
         <p>Add character art, lore, and edit revealed character cards.</p>
+      </button>
+      <button class="choice-card" onclick="showStudioTab('artwork')">
+        <h2>Artwork Management</h2>
+        <p>Add episode artwork, café moments, covers, and expandable gallery cards.</p>
       </button>
     </div>
 
@@ -970,6 +1001,44 @@ footer a:hover{color:var(--amber-light)}
 
       <p class="studio-section-title">Manage Characters</p>
       <div class="manage-list" id="characterManageList"></div>
+
+
+    <div id="artworkStudio" class="studio-tab">
+      <button class="back-choice" onclick="backToStudioChoice()">← Back to Studio Options</button>
+      <p class="studio-section-title" id="artFormTitle">Add Artwork</p>
+      <div class="upload-form">
+        <input type="hidden" id="artId"/>
+        <div class="form-row">
+          <div>
+            <label class="s-label">Display Order</label>
+            <input class="s-input" type="number" id="artOrder" min="0" placeholder="e.g. 1"/>
+          </div>
+          <div>
+            <label class="s-label">Artwork Title</label>
+            <input class="s-input" type="text" id="artTitle" placeholder="e.g. Venkat Sir's Birthday"/>
+          </div>
+        </div>
+        <label class="s-label">Episode / Source Label</label>
+        <input class="s-input" type="text" id="artEpisode" placeholder="e.g. Episode 7 · The Graduation" style="margin-bottom:0.8rem"/>
+        <label class="s-label">Short Description</label>
+        <textarea class="s-textarea" id="artDescription" placeholder="Write a small note about this artwork, scene, or moment..." style="margin-bottom:0.8rem"></textarea>
+        <div class="file-drop" id="artFileDrop">
+          <input type="file" accept="image/png,image/jpeg,image/jpg" id="artImageInput" onchange="onArtworkImageSelect(this)"/>
+          <p class="file-drop-text">Click or drag PNG / JPG / JPEG artwork here</p>
+          <p class="file-name" id="artFileName"></p>
+        </div>
+        <div class="studio-actions">
+          <button class="s-submit" onclick="saveArtwork()">Save Artwork</button>
+          <button class="s-submit ghost" onclick="removeArtworkImage()" type="button">Remove Image Only</button>
+          <button class="s-submit ghost" onclick="clearArtworkDescription()" type="button">Clear Description</button>
+          <button class="s-submit ghost" onclick="resetArtworkForm()" type="button">New Artwork</button>
+        </div>
+        <div class="form-msg" id="artFormMsg"></div>
+      </div>
+
+      <p class="studio-section-title">Manage Artwork</p>
+      <div class="manage-list" id="artworkManageList"></div>
+    </div>
     </div>
 
   </div>
@@ -995,6 +1064,8 @@ const PDF_BUCKET = 'novel-pdfs';
 const EPISODES_TABLE = 'episodes';
 const CHARACTERS_TABLE = 'characters';
 const CHARACTER_BUCKET = 'character-art';
+const ARTWORKS_TABLE = 'artworks';
+const ARTWORK_BUCKET = 'artwork-gallery';
 
 const SUPABASE_READY = SUPABASE_URL.startsWith('https://') && SUPABASE_ANON_KEY.length > 40;
 const supabase = SUPABASE_READY ? createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
@@ -1005,9 +1076,12 @@ const STORE_KEY = 'kalindis_episodes';
 // ── Episodes in memory ──
 let episodes = [];
 let characters = [];
+let artworks = [];
 let currentPdfFile = null;
 let currentCharacterImageFile = null;
 let editingCharacterImagePath = null;
+let currentArtworkImageFile = null;
+let editingArtworkImagePath = null;
 
 // ──────────────────────────────────────────────
 // LOAD episodes on page start
@@ -1016,6 +1090,7 @@ async function loadEpisodes(){
   if(SUPABASE_READY){
     await loadEpisodesFromSupabase();
     await loadCharactersFromSupabase();
+    await loadArtworkFromSupabase();
   } else {
     loadEpisodesFromLocalStorage();
     showSetupNotice();
@@ -1024,6 +1099,7 @@ async function loadEpisodes(){
   renderManage();
   renderCharactersPublic();
   renderCharacterManage();
+  renderArtworkManage();
 }
 
 async function loadEpisodesFromSupabase(){
@@ -1365,6 +1441,7 @@ function openStudio(){
   backToStudioChoice();
   renderManage();
   renderCharacterManage();
+  renderArtworkManage();
   document.getElementById('studioPanel').classList.add('open');
   document.body.style.overflow='hidden';
   if(!SUPABASE_READY) showSetupNotice();
@@ -1381,12 +1458,15 @@ function exitStudio(){
   document.getElementById('pdfInput').value='';
   currentPdfFile = null;
   resetCharacterForm();
+  resetArtworkForm();
 }
 
 function showStudioTab(tab){
   document.getElementById('studioChoice').style.display='none';
   document.getElementById('episodeStudio').classList.toggle('active', tab === 'episodes');
   document.getElementById('characterStudio').classList.toggle('active', tab === 'characters');
+  document.getElementById('artworkStudio')?.classList.toggle('active', tab === 'artwork');
+  if(tab === 'artwork') renderArtworkManage();
   if(tab === 'characters') renderCharacterManage();
   if(tab === 'episodes') renderManage();
 }
@@ -1396,6 +1476,7 @@ function backToStudioChoice(){
   if(choice) choice.style.display='grid';
   document.getElementById('episodeStudio')?.classList.remove('active');
   document.getElementById('characterStudio')?.classList.remove('active');
+  document.getElementById('artworkStudio')?.classList.remove('active');
 }
 
 function onFileSelect(input){
@@ -1421,6 +1502,10 @@ const charDrop = document.getElementById('charFileDrop');
 charDrop.addEventListener('dragenter',()=>charDrop.classList.add('drag'));
 charDrop.addEventListener('dragleave',()=>charDrop.classList.remove('drag'));
 charDrop.addEventListener('drop',()=>charDrop.classList.remove('drag'));
+const artDrop = document.getElementById('artFileDrop');
+artDrop?.addEventListener('dragenter',()=>artDrop.classList.add('drag'));
+artDrop?.addEventListener('dragleave',()=>artDrop.classList.remove('drag'));
+artDrop?.addEventListener('drop',()=>artDrop.classList.remove('drag'));
 
 async function saveEpisode(){
   const num = parseInt(document.getElementById('epNum').value);
@@ -1585,6 +1670,7 @@ async function saveCharacter(){
   msg.style.color='#e8a96a';
   msg.textContent = id ? 'Character updated.' : 'Character added.';
   await loadCharactersFromSupabase();
+    await loadArtworkFromSupabase();
   renderCharactersPublic();
   renderCharacterManage();
   resetCharacterForm(false);
@@ -1644,6 +1730,7 @@ async function removeCharacterImage(){
   if(oldPath) await supabase.storage.from(CHARACTER_BUCKET).remove([oldPath]);
   editingCharacterImagePath = null;
   await loadCharactersFromSupabase();
+    await loadArtworkFromSupabase();
   renderCharactersPublic();
   renderCharacterManage();
   msg.style.color='#e8a96a';
@@ -1663,6 +1750,7 @@ async function clearCharacterWriting(){
   const { error } = await supabase.from(CHARACTERS_TABLE).update({ lore:'' }).eq('id', id);
   if(error){ msg.style.color='#c0614a'; msg.textContent='Could not clear writing.'; console.error(error); return; }
   await loadCharactersFromSupabase();
+    await loadArtworkFromSupabase();
   renderCharactersPublic();
   renderCharacterManage();
   msg.style.color='#e8a96a';
@@ -1677,6 +1765,7 @@ async function deleteCharacter(id, silent=false){
   if(error){ alert('Could not delete character.'); console.error(error); return; }
   if(c.image_path) await supabase.storage.from(CHARACTER_BUCKET).remove([c.image_path]);
   await loadCharactersFromSupabase();
+    await loadArtworkFromSupabase();
   renderCharactersPublic();
   renderCharacterManage();
   resetCharacterForm(false);
@@ -1701,6 +1790,198 @@ function renderCharacterManage(){
       </div>
     </div>
   `).join('');
+}
+
+
+// ──────────────────────────────────────────────
+// ARTWORK MANAGEMENT
+// ──────────────────────────────────────────────
+async function loadArtworkFromSupabase(){
+  const { data, error } = await supabase
+    .from(ARTWORKS_TABLE)
+    .select('id,title,description,episode_label,image_path,sort_order,is_visible,created_at')
+    .eq('is_visible', true)
+    .order('sort_order', { ascending:true })
+    .order('created_at', { ascending:true });
+
+  if(error){
+    console.error(error);
+    artworks = [];
+    return;
+  }
+  artworks = data || [];
+}
+
+function onArtworkImageSelect(input){
+  const file = input.files[0];
+  const msg = document.getElementById('artFormMsg');
+  if(!file) return;
+  const okTypes = ['image/png','image/jpeg','image/jpg'];
+  const okExt = /\.(png|jpe?g)$/i.test(file.name);
+  if(!okTypes.includes(file.type) && !okExt){
+    msg.style.color='#c0614a';
+    msg.textContent='Please select PNG, JPG, JPEG, or WEBP image only.';
+    input.value='';
+    currentArtworkImageFile = null;
+    return;
+  }
+  currentArtworkImageFile = file;
+  document.getElementById('artFileName').textContent = file.name;
+  msg.textContent='';
+}
+
+async function saveArtwork(){
+  const id = document.getElementById('artId').value.trim();
+  const title = document.getElementById('artTitle').value.trim();
+  const episode_label = document.getElementById('artEpisode').value.trim();
+  const description = document.getElementById('artDescription').value.trim();
+  const sort_order = parseInt(document.getElementById('artOrder').value) || 0;
+  const msg = document.getElementById('artFormMsg');
+
+  if(!SUPABASE_READY){ msg.style.color='#c0614a'; msg.textContent='Supabase is not configured.'; return; }
+  if(!title){ msg.style.color='#c0614a'; msg.textContent='Please enter an artwork title.'; return; }
+  if(!id && !currentArtworkImageFile){ msg.style.color='#c0614a'; msg.textContent='Please select an artwork image.'; return; }
+
+  msg.style.color='#e8a96a';
+  msg.textContent='Saving artwork...';
+
+  let image_path = editingArtworkImagePath || null;
+  if(currentArtworkImageFile){
+    const safeName = currentArtworkImageFile.name.replace(/[^a-zA-Z0-9._-]/g,'-').toLowerCase();
+    image_path = `kalindi/${title.replace(/[^a-zA-Z0-9._-]/g,'-').toLowerCase()}-${Date.now()}-${safeName}`;
+    const { error: uploadError } = await supabase.storage
+      .from(ARTWORK_BUCKET)
+      .upload(image_path, currentArtworkImageFile, { contentType: currentArtworkImageFile.type || 'image/jpeg', upsert:true });
+    if(uploadError){
+      console.error(uploadError);
+      msg.style.color='#c0614a';
+      msg.textContent='Artwork upload failed. Check artwork-gallery bucket policy.';
+      return;
+    }
+    if(editingArtworkImagePath && editingArtworkImagePath !== image_path){
+      await supabase.storage.from(ARTWORK_BUCKET).remove([editingArtworkImagePath]);
+    }
+  }
+
+  const payload = { title, description, episode_label, image_path, sort_order, is_visible:true };
+  const query = id
+    ? supabase.from(ARTWORKS_TABLE).update(payload).eq('id', id)
+    : supabase.from(ARTWORKS_TABLE).insert(payload);
+  const { error } = await query;
+  if(error){
+    console.error(error);
+    msg.style.color='#c0614a';
+    msg.textContent='Artwork details were not saved. Check table policies.';
+    return;
+  }
+
+  msg.style.color='#e8a96a';
+  msg.textContent = id ? 'Artwork updated.' : 'Artwork added.';
+  await loadArtworkFromSupabase();
+  renderArtworkManage();
+  resetArtworkForm(false);
+}
+
+function editArtwork(id){
+  const art = artworks.find(x=>x.id===id);
+  if(!art) return;
+  document.getElementById('artFormTitle').textContent = `Edit ${art.title || 'Artwork'}`;
+  document.getElementById('artId').value = art.id;
+  document.getElementById('artOrder').value = art.sort_order || 0;
+  document.getElementById('artTitle').value = art.title || '';
+  document.getElementById('artEpisode').value = art.episode_label || '';
+  document.getElementById('artDescription').value = art.description || '';
+  editingArtworkImagePath = art.image_path || null;
+  currentArtworkImageFile = null;
+  document.getElementById('artImageInput').value='';
+  document.getElementById('artFileName').textContent = art.image_path ? 'Existing artwork attached' : 'Image not available';
+  document.getElementById('artFormMsg').textContent='Editing existing artwork.';
+  document.getElementById('artFormMsg').style.color='#e8a96a';
+}
+
+function resetArtworkForm(clearMsg=true){
+  const ids = ['artId','artOrder','artTitle','artEpisode','artDescription','artFileName'];
+  ids.forEach(id=>{ const el=document.getElementById(id); if(el) el.value !== undefined ? el.value='' : el.textContent=''; });
+  const title = document.getElementById('artFormTitle');
+  if(title) title.textContent='Add Artwork';
+  const input = document.getElementById('artImageInput');
+  if(input) input.value='';
+  currentArtworkImageFile = null;
+  editingArtworkImagePath = null;
+  if(clearMsg){ const msg=document.getElementById('artFormMsg'); if(msg) msg.textContent=''; }
+}
+
+async function removeArtworkImage(){
+  const id = document.getElementById('artId').value.trim();
+  const msg = document.getElementById('artFormMsg');
+  currentArtworkImageFile = null;
+  document.getElementById('artImageInput').value='';
+  document.getElementById('artFileName').textContent='Image not available';
+  if(!id){
+    editingArtworkImagePath = null;
+    msg.style.color='#e8a96a';
+    msg.textContent='Image removed from this unsaved form.';
+    return;
+  }
+  const oldPath = editingArtworkImagePath;
+  const { error } = await supabase.from(ARTWORKS_TABLE).update({ image_path:null }).eq('id', id);
+  if(error){ msg.style.color='#c0614a'; msg.textContent='Could not remove artwork image.'; console.error(error); return; }
+  if(oldPath) await supabase.storage.from(ARTWORK_BUCKET).remove([oldPath]);
+  editingArtworkImagePath = null;
+  await loadArtworkFromSupabase();
+  renderArtworkManage();
+  msg.style.color='#e8a96a';
+  msg.textContent='Artwork image removed.';
+}
+
+async function clearArtworkDescription(){
+  const id = document.getElementById('artId').value.trim();
+  const msg = document.getElementById('artFormMsg');
+  document.getElementById('artDescription').value='';
+  if(!id){ msg.style.color='#e8a96a'; msg.textContent='Description cleared from this unsaved form.'; return; }
+  const { error } = await supabase.from(ARTWORKS_TABLE).update({ description:'' }).eq('id', id);
+  if(error){ msg.style.color='#c0614a'; msg.textContent='Could not clear description.'; console.error(error); return; }
+  await loadArtworkFromSupabase();
+  renderArtworkManage();
+  msg.style.color='#e8a96a';
+  msg.textContent='Description cleared.';
+}
+
+async function deleteArtwork(id){
+  const art = artworks.find(x=>x.id===id);
+  if(!art) return;
+  if(!confirm(`Delete ${art.title || 'this artwork'}?`)) return;
+  const { error } = await supabase.from(ARTWORKS_TABLE).delete().eq('id', id);
+  if(error){ alert('Could not delete artwork.'); console.error(error); return; }
+  if(art.image_path) await supabase.storage.from(ARTWORK_BUCKET).remove([art.image_path]);
+  await loadArtworkFromSupabase();
+  renderArtworkManage();
+  resetArtworkForm(false);
+  const msg = document.getElementById('artFormMsg');
+  if(msg){ msg.style.color='#e8a96a'; msg.textContent='Artwork deleted.'; }
+}
+
+function renderArtworkManage(){
+  const list = document.getElementById('artworkManageList');
+  if(!list) return;
+  if(!artworks.length){
+    list.innerHTML='<p class="manage-empty">No artwork yet.</p>';
+    return;
+  }
+  list.innerHTML = [...artworks].sort((a,b)=>(a.sort_order||0)-(b.sort_order||0)).map(art=>`
+    <div class="manage-item">
+      <span class="manage-num">${art.sort_order || 0}</span>
+      <span class="manage-name">${esc(art.title || 'Untitled Artwork')}</span>
+      <div class="manage-actions">
+        <button class="manage-edit" onclick="editArtwork('${escAttr(art.id)}')">Edit</button>
+        <button class="manage-del" onclick="deleteArtwork('${escAttr(art.id)}')">Delete</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function openArtworkPage(){
+  window.location.href = 'artwork.html';
 }
 
 
@@ -1730,6 +2011,7 @@ window.onFileSelect = onFileSelect;
 window.saveEpisode = saveEpisode;
 window.deleteEpisode = deleteEpisode;
 window.scrollToCharacters = scrollToCharacters;
+window.openArtworkPage = openArtworkPage;
 window.closeCharacterModal = closeCharacterModal;
 
 
@@ -1759,7 +2041,15 @@ Object.assign(window, {
   deleteCharacter,
   removeCharacterImage,
   clearCharacterWriting,
-  resetCharacterForm
+  resetCharacterForm,
+  openArtworkPage,
+  onArtworkImageSelect,
+  saveArtwork,
+  editArtwork,
+  deleteArtwork,
+  removeArtworkImage,
+  clearArtworkDescription,
+  resetArtworkForm
 });
 
 // ── INIT ──
