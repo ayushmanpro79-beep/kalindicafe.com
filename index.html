@@ -1001,7 +1001,7 @@ footer a:hover{color:var(--amber-light)}
 
       <p class="studio-section-title">Manage Characters</p>
       <div class="manage-list" id="characterManageList"></div>
-
+    </div>
 
     <div id="artworkStudio" class="studio-tab">
       <button class="back-choice" onclick="backToStudioChoice()">← Back to Studio Options</button>
@@ -1022,8 +1022,8 @@ footer a:hover{color:var(--amber-light)}
         <input class="s-input" type="text" id="artEpisode" placeholder="e.g. Episode 7 · The Graduation" style="margin-bottom:0.8rem"/>
         <label class="s-label">Short Description</label>
         <textarea class="s-textarea" id="artDescription" placeholder="Write a small note about this artwork, scene, or moment..." style="margin-bottom:0.8rem"></textarea>
-        <div class="file-drop" id="artFileDrop">
-          <input type="file" accept="image/png,image/jpeg,image/jpg" id="artImageInput" onchange="onArtworkImageSelect(this)"/>
+        <div class="file-drop" id="artFileDrop" ondragover="handleArtworkDragOver(event)" ondragleave="handleArtworkDragLeave(event)" ondrop="handleArtworkDrop(event)">
+          <input type="file" accept=".png,.jpg,.jpeg,image/png,image/jpeg" id="artImageInput" onchange="onArtworkImageSelect(this)"/>
           <p class="file-drop-text">Click or drag PNG / JPG / JPEG artwork here</p>
           <p class="file-name" id="artFileName"></p>
         </div>
@@ -1038,7 +1038,6 @@ footer a:hover{color:var(--amber-light)}
 
       <p class="studio-section-title">Manage Artwork</p>
       <div class="manage-list" id="artworkManageList"></div>
-    </div>
     </div>
 
   </div>
@@ -1812,22 +1811,64 @@ async function loadArtworkFromSupabase(){
   artworks = data || [];
 }
 
+function validateArtworkImage(file){
+  if(!file) return 'Please select an artwork image.';
+  const okExt = /\.(png|jpe?g)$/i.test(file.name || '');
+  const okType = ['image/png','image/jpeg','image/jpg',''].includes(file.type || '');
+  if(!okExt || !okType){
+    return 'Please select PNG, JPG, or JPEG image only.';
+  }
+  return '';
+}
+
 function onArtworkImageSelect(input){
-  const file = input.files[0];
+  const file = input.files && input.files[0];
   const msg = document.getElementById('artFormMsg');
   if(!file) return;
-  const okTypes = ['image/png','image/jpeg','image/jpg'];
-  const okExt = /\.(png|jpe?g)$/i.test(file.name);
-  if(!okTypes.includes(file.type) && !okExt){
+  const validationError = validateArtworkImage(file);
+  if(validationError){
     msg.style.color='#c0614a';
-    msg.textContent='Please select PNG, JPG, JPEG, or WEBP image only.';
+    msg.textContent=validationError;
     input.value='';
     currentArtworkImageFile = null;
+    document.getElementById('artFileName').textContent='';
     return;
   }
   currentArtworkImageFile = file;
-  document.getElementById('artFileName').textContent = file.name;
-  msg.textContent='';
+  document.getElementById('artFileName').textContent = `${file.name} selected`;
+  msg.style.color='#e8a96a';
+  msg.textContent='Artwork ready to upload. Click Save Artwork.';
+}
+
+function handleArtworkDragOver(event){
+  event.preventDefault();
+  document.getElementById('artFileDrop')?.classList.add('drag');
+}
+
+function handleArtworkDragLeave(event){
+  event.preventDefault();
+  document.getElementById('artFileDrop')?.classList.remove('drag');
+}
+
+function handleArtworkDrop(event){
+  event.preventDefault();
+  const dropZone = document.getElementById('artFileDrop');
+  dropZone?.classList.remove('drag');
+  const file = event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files[0];
+  const msg = document.getElementById('artFormMsg');
+  const validationError = validateArtworkImage(file);
+  if(validationError){
+    msg.style.color='#c0614a';
+    msg.textContent=validationError;
+    currentArtworkImageFile = null;
+    document.getElementById('artImageInput').value='';
+    document.getElementById('artFileName').textContent='';
+    return;
+  }
+  currentArtworkImageFile = file;
+  document.getElementById('artFileName').textContent = `${file.name} selected`;
+  msg.style.color='#e8a96a';
+  msg.textContent='Artwork ready to upload. Click Save Artwork.';
 }
 
 async function saveArtwork(){
@@ -1840,7 +1881,11 @@ async function saveArtwork(){
 
   if(!SUPABASE_READY){ msg.style.color='#c0614a'; msg.textContent='Supabase is not configured.'; return; }
   if(!title){ msg.style.color='#c0614a'; msg.textContent='Please enter an artwork title.'; return; }
-  if(!id && !currentArtworkImageFile){ msg.style.color='#c0614a'; msg.textContent='Please select an artwork image.'; return; }
+  if(!id && !currentArtworkImageFile){ msg.style.color='#c0614a'; msg.textContent='Please select a PNG, JPG, or JPEG artwork image.'; return; }
+  if(currentArtworkImageFile){
+    const validationError = validateArtworkImage(currentArtworkImageFile);
+    if(validationError){ msg.style.color='#c0614a'; msg.textContent=validationError; return; }
+  }
 
   msg.style.color='#e8a96a';
   msg.textContent='Saving artwork...';
@@ -1855,7 +1900,7 @@ async function saveArtwork(){
     if(uploadError){
       console.error(uploadError);
       msg.style.color='#c0614a';
-      msg.textContent='Artwork upload failed. Check artwork-gallery bucket policy.';
+      msg.textContent=`Artwork upload failed: ${uploadError.message || 'Check artwork-gallery bucket policy.'}`;
       return;
     }
     if(editingArtworkImagePath && editingArtworkImagePath !== image_path){
@@ -1871,7 +1916,7 @@ async function saveArtwork(){
   if(error){
     console.error(error);
     msg.style.color='#c0614a';
-    msg.textContent='Artwork details were not saved. Check table policies.';
+    msg.textContent=`Artwork details were not saved: ${error.message || 'Check table policies.'}`;
     return;
   }
 
@@ -2044,6 +2089,9 @@ Object.assign(window, {
   resetCharacterForm,
   openArtworkPage,
   onArtworkImageSelect,
+  handleArtworkDragOver,
+  handleArtworkDragLeave,
+  handleArtworkDrop,
   saveArtwork,
   editArtwork,
   deleteArtwork,
