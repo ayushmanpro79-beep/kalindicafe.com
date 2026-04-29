@@ -3,14 +3,50 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Kalindi's</title>
+<title>Kalindi’s Café – Slice of Life Web Novel Reader</title>
+<meta name="description" content="Read Kalindi’s Café, a warm Indian slice-of-life web novel set in Hyderabad. Follow Ayansh Mohanty through coffee, conversations, quiet belonging, and an immersive online reader.">
+<meta name="keywords" content="web novel, reader, online novel reader, Kalindi's, Kalindi’s Café, slice of life, Indian web novel, Hyderabad story, The Smell of Somewhere New, Ayushman Gouda, SOUL Productions">
+<meta name="author" content="Ayushman Gouda">
+<meta name="robots" content="index, follow">
+<meta name="theme-color" content="#0d0805">
+<link rel="canonical" href="https://kalindicafecom.vercel.app/">
+
+<meta property="og:title" content="Kalindi’s Café – A Slice of Life Web Novel">
+<meta property="og:description" content="A quiet Hyderabad web novel about coffee, conversations, wrong turns, and finding somewhere you belong.">
+<meta property="og:image" content="https://kalindicafecom.vercel.app/cover.png">
+<meta property="og:url" content="https://kalindicafecom.vercel.app/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Kalindi’s Café">
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Kalindi’s Café – Slice of Life Web Novel Reader">
+<meta name="twitter:description" content="Read The Smell of Somewhere New, a warm Indian slice-of-life web novel set in Hyderabad.">
+<meta name="twitter:image" content="https://kalindicafecom.vercel.app/cover.png">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "CreativeWork",
+  "name": "The Smell of Somewhere New",
+  "alternateName": "Kalindi’s Café",
+  "description": "A quiet Indian slice-of-life web novel set in Hyderabad, following Ayansh Mohanty as he discovers Kalindi’s, a small WiFi-free café where coffee, conversations, and belonging slowly change his life.",
+  "genre": ["Slice of life", "Web novel", "Indian fiction"],
+  "author": {
+    "@type": "Person",
+    "name": "Ayushman Gouda"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "SOUL Productions"
+  },
+  "url": "https://kalindicafecom.vercel.app/",
+  "image": "https://kalindicafecom.vercel.app/cover.png",
+  "inLanguage": "en"
+}
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&family=Caveat:wght@400;500&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet"/>
-<script>
-  window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
-</script>
-<script defer src="/_vercel/insights/script.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
@@ -321,6 +357,42 @@ footer{
   text-transform:uppercase;
   background:#0d0805;
 }
+footer a{
+  color:rgba(232,169,106,0.6);
+  text-decoration:none;
+  margin:0 0.35rem;
+}
+footer a:hover{color:var(--amber-light)}
+
+.seo-story-summary{
+  background:#0d0805;
+  padding:0 clamp(1.2rem,6vw,5rem) 4rem;
+}
+.seo-story-card{
+  max-width:760px;
+  margin:0 auto;
+  padding:1.8rem;
+  border:1px solid rgba(200,118,58,0.14);
+  background:rgba(245,237,224,0.025);
+}
+.seo-story-card h2{
+  font-family:'Cormorant Garamond',Georgia,serif;
+  font-weight:300;
+  font-style:italic;
+  font-size:clamp(1.5rem,3vw,2rem);
+  margin-bottom:0.65rem;
+  color:var(--cream);
+}
+.seo-story-card p{
+  color:rgba(245,237,224,0.52);
+  font-size:1rem;
+  line-height:1.7;
+}
+.seo-story-card a{
+  color:var(--amber-light);
+  text-decoration:none;
+}
+.seo-story-card a:hover{text-decoration:underline}
 
 /* ══ PDF READER OVERLAY ══ */
 .reader-overlay{
@@ -754,6 +826,19 @@ footer{
   <p class="poster-attr">— the chalkboard outside Kalindi's</p>
 </div>
 
+<!-- ── SEO STORY SUMMARY ── -->
+<section class="seo-story-summary" aria-label="About Kalindi’s Café web novel">
+  <div class="seo-story-card">
+    <h2>Kalindi’s Café — an Indian slice-of-life web novel</h2>
+    <p>
+      <strong>The Smell of Somewhere New</strong> is a warm online web novel reader experience set in Hyderabad.
+      Follow Ayansh Mohanty as a wrong GPS turn leads him to Kalindi’s, a small WiFi-free café filled with filter coffee, quiet conversations, older regulars, and the slow feeling of belonging.
+      Read the story episodes online and meet the characters through this immersive reader by Ayushman Gouda under SOUL Productions.
+    </p>
+    <p><a href="about.html">Read more about the story →</a></p>
+  </div>
+</section>
+
 <!-- ── EPISODES ── -->
 <section class="episodes-section" id="episodes">
   <div class="section-head">
@@ -767,7 +852,10 @@ footer{
 
 <!-- ── FOOTER ── -->
 <footer>
-  <span>Kalindi's &nbsp;·&nbsp; The Smell of Somewhere New</span>
+  <span>Kalindi's &nbsp;·&nbsp; The Smell of Somewhere New</span><br>
+  <a href="about.html">About the Story</a>
+  <span>&nbsp;·&nbsp;</span>
+  <a href="characters.html">Characters</a>
 </footer>
 
 
