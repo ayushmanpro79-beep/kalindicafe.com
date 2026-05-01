@@ -841,6 +841,7 @@ footer a:hover{color:var(--amber-light)}
       <button class="hero-cta" onclick="scrollToEpisodes()">Read the Story ↓</button>
       <button class="hero-cta secondary" onclick="scrollToCharacters()">Meet the Characters →</button>
       <button class="hero-cta secondary" onclick="openArtworkPage()">View Artwork →</button>
+      <button class="hero-cta secondary" onclick="openLettersPage()">Letters to Kalindi →</button>
     </div>
   </div>
 </section>
@@ -883,6 +884,8 @@ footer a:hover{color:var(--amber-light)}
   <a href="characters.html">Characters</a>
   <span>&nbsp;·&nbsp;</span>
   <a href="artwork.html">Artwork</a>
+  <span>&nbsp;·&nbsp;</span>
+  <a href="letters.html">Letters to Kalindi</a>
 </footer>
 
 
@@ -934,6 +937,10 @@ footer a:hover{color:var(--amber-light)}
       <button class="choice-card" onclick="showStudioTab('artwork')">
         <h2>Artwork Management</h2>
         <p>Add episode artwork, café moments, covers, and expandable gallery cards.</p>
+      </button>
+      <button class="choice-card" onclick="showStudioTab('letters')">
+        <h2>Letters & Replies</h2>
+        <p>Read reader letters and reply as Kalindi's characters.</p>
       </button>
     </div>
 
@@ -1040,6 +1047,41 @@ footer a:hover{color:var(--amber-light)}
       <div class="manage-list" id="artworkManageList"></div>
     </div>
 
+    <div id="lettersStudio" class="studio-tab">
+      <button class="back-choice" onclick="backToStudioChoice()">← Back to Studio Options</button>
+
+      <p class="studio-section-title">Reader Letters</p>
+      <div class="manage-list" id="lettersManageList">
+        <p class="manage-empty">Open this section to load reader letters.</p>
+      </div>
+
+      <p class="studio-section-title" id="replyFormTitle">Reply as a Character</p>
+      <div class="upload-form">
+        <input type="hidden" id="replyLetterId"/>
+
+        <label class="s-label">Selected Letter</label>
+        <input class="s-input" type="text" id="replyTarget" readonly placeholder="Select a reader letter above" style="margin-bottom:0.8rem"/>
+
+        <label class="s-label">Character Name</label>
+        <input class="s-input" type="text" id="replyCharacter" placeholder="e.g. Venkat Sir, Mrs. Sen, Ayansh" style="margin-bottom:0.8rem"/>
+
+        <label class="s-label">Letter / Reply</label>
+        <textarea class="s-textarea" id="replyText" placeholder="Write the reply as the character here..." style="margin-bottom:0.8rem"></textarea>
+
+        <div class="file-drop" id="replyFileDrop">
+          <input type="file" accept=".pdf,.png,.jpg,.jpeg,application/pdf,image/png,image/jpeg" id="replyFileInput" onchange="onReplyFileSelect(this)"/>
+          <p class="file-drop-text">Attach PDF / PNG / JPG / JPEG with the reply (optional)</p>
+          <p class="file-name" id="replyFileName"></p>
+        </div>
+
+        <div class="studio-actions">
+          <button class="s-submit" onclick="saveLetterReply()">Send Reply</button>
+          <button class="s-submit ghost" onclick="clearLetterReplyForm()" type="button">Clear Reply Form</button>
+        </div>
+        <div class="form-msg" id="replyMsg"></div>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -1065,6 +1107,8 @@ const CHARACTERS_TABLE = 'characters';
 const CHARACTER_BUCKET = 'character-art';
 const ARTWORKS_TABLE = 'artworks';
 const ARTWORK_BUCKET = 'artwork-gallery';
+const LETTERS_TABLE = 'reader_letters';
+const LETTER_REPLY_BUCKET = 'letter-replies';
 
 const SUPABASE_READY = SUPABASE_URL.startsWith('https://') && SUPABASE_ANON_KEY.length > 40;
 const supabase = SUPABASE_READY ? createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
@@ -1081,6 +1125,8 @@ let currentCharacterImageFile = null;
 let editingCharacterImagePath = null;
 let currentArtworkImageFile = null;
 let editingArtworkImagePath = null;
+let readerLetters = [];
+let currentReplyFile = null;
 
 // ──────────────────────────────────────────────
 // LOAD episodes on page start
@@ -1441,6 +1487,7 @@ function openStudio(){
   renderManage();
   renderCharacterManage();
   renderArtworkManage();
+  renderLettersManage();
   document.getElementById('studioPanel').classList.add('open');
   document.body.style.overflow='hidden';
   if(!SUPABASE_READY) showSetupNotice();
@@ -1458,6 +1505,7 @@ function exitStudio(){
   currentPdfFile = null;
   resetCharacterForm();
   resetArtworkForm();
+  clearLetterReplyForm();
 }
 
 function showStudioTab(tab){
@@ -1465,9 +1513,11 @@ function showStudioTab(tab){
   document.getElementById('episodeStudio').classList.toggle('active', tab === 'episodes');
   document.getElementById('characterStudio').classList.toggle('active', tab === 'characters');
   document.getElementById('artworkStudio')?.classList.toggle('active', tab === 'artwork');
+  document.getElementById('lettersStudio')?.classList.toggle('active', tab === 'letters');
   if(tab === 'artwork') renderArtworkManage();
   if(tab === 'characters') renderCharacterManage();
   if(tab === 'episodes') renderManage();
+  if(tab === 'letters') renderLettersManage();
 }
 
 function backToStudioChoice(){
@@ -1476,6 +1526,7 @@ function backToStudioChoice(){
   document.getElementById('episodeStudio')?.classList.remove('active');
   document.getElementById('characterStudio')?.classList.remove('active');
   document.getElementById('artworkStudio')?.classList.remove('active');
+  document.getElementById('lettersStudio')?.classList.remove('active');
 }
 
 function onFileSelect(input){
@@ -1505,6 +1556,10 @@ const artDrop = document.getElementById('artFileDrop');
 artDrop?.addEventListener('dragenter',()=>artDrop.classList.add('drag'));
 artDrop?.addEventListener('dragleave',()=>artDrop.classList.remove('drag'));
 artDrop?.addEventListener('drop',()=>artDrop.classList.remove('drag'));
+const replyDrop = document.getElementById('replyFileDrop');
+replyDrop?.addEventListener('dragenter',()=>replyDrop.classList.add('drag'));
+replyDrop?.addEventListener('dragleave',()=>replyDrop.classList.remove('drag'));
+replyDrop?.addEventListener('drop',()=>replyDrop.classList.remove('drag'));
 
 async function saveEpisode(){
   const num = parseInt(document.getElementById('epNum').value);
@@ -2029,6 +2084,180 @@ function openArtworkPage(){
   window.location.href = 'artwork.html';
 }
 
+function openLettersPage(){
+  window.location.href = 'letters.html';
+}
+
+
+
+
+// ──────────────────────────────────────────────
+// LETTERS & CHARACTER REPLIES MANAGEMENT
+// ──────────────────────────────────────────────
+async function loadLettersFromSupabase(){
+  if(!SUPABASE_READY){ readerLetters = []; return; }
+  const { data, error } = await supabase
+    .from(LETTERS_TABLE)
+    .select('*')
+    .order('created_at', { ascending:false });
+
+  if(error){
+    console.error(error);
+    readerLetters = [];
+    const list = document.getElementById('lettersManageList');
+    if(list) list.innerHTML = '<p class="manage-empty">Could not load letters. Check reader_letters table and policies.</p>';
+    return;
+  }
+  readerLetters = data || [];
+}
+
+function renderLettersManage(){
+  const list = document.getElementById('lettersManageList');
+  if(!list) return;
+  if(!SUPABASE_READY){
+    list.innerHTML = '<p class="manage-empty">Supabase is not configured yet.</p>';
+    return;
+  }
+  list.innerHTML = '<p class="manage-empty">Loading letters…</p>';
+  loadLettersFromSupabase().then(()=>{
+    if(!readerLetters.length){
+      list.innerHTML = '<p class="manage-empty">No reader letters yet.</p>';
+      return;
+    }
+    list.innerHTML = readerLetters.map(letter=>{
+      const shortText = (letter.letter_content || '').trim();
+      const target = letter.target_character ? `To ${esc(letter.target_character)} · ` : '';
+      const replied = letter.reply ? 'Replied' : 'No reply yet';
+      const sender = letter.sender_name || 'Unnamed reader';
+      return `
+        <div class="manage-item" style="align-items:flex-start">
+          <div style="flex:1;min-width:0">
+            <div class="manage-name" style="white-space:normal;overflow:visible;text-overflow:clip">${esc(sender)}</div>
+            <div style="font-size:.82rem;color:rgba(200,118,58,.72);margin:.12rem 0 .35rem">${target}${formatLetterDate(letter.created_at)} · ${replied}</div>
+            <div style="font-size:.9rem;color:rgba(245,237,224,.55);line-height:1.45">${esc(shortText.slice(0,150))}${shortText.length>150 ? '…' : ''}</div>
+            ${letter.reply ? `<div style="margin-top:.45rem;font-size:.86rem;color:rgba(232,169,106,.82)">↳ ${esc(letter.reply_character || 'Kalindi')} replied: ${esc(String(letter.reply).slice(0,90))}${String(letter.reply).length>90 ? '…' : ''}</div>` : ''}
+          </div>
+          <div class="manage-actions">
+            <button class="manage-edit" onclick="selectLetterForReply('${escAttr(letter.id)}')">Reply</button>
+          </div>
+        </div>
+      `;
+    }).join('');
+  });
+}
+
+function selectLetterForReply(id){
+  const letter = readerLetters.find(l=>l.id===id);
+  if(!letter) return;
+  document.getElementById('replyLetterId').value = id;
+  document.getElementById('replyTarget').value = `${letter.sender_name || 'Unnamed reader'} — ${(letter.letter_content || '').slice(0,70)}${(letter.letter_content || '').length>70 ? '…' : ''}`;
+  document.getElementById('replyCharacter').value = letter.reply_character || '';
+  document.getElementById('replyText').value = letter.reply || '';
+  document.getElementById('replyFileName').textContent = letter.reply_file_path ? `Existing attachment: ${letter.reply_file_path.split('/').pop()}` : '';
+  document.getElementById('replyMsg').style.color = '#e8a96a';
+  document.getElementById('replyMsg').textContent = `Selected letter from ${letter.sender_name || 'reader'}.`;
+}
+
+function onReplyFileSelect(input){
+  const file = input.files[0];
+  const msg = document.getElementById('replyMsg');
+  if(!file){ currentReplyFile = null; document.getElementById('replyFileName').textContent=''; return; }
+  const okTypes = ['application/pdf','image/png','image/jpeg','image/jpg'];
+  const okExt = /\.(pdf|png|jpe?g)$/i.test(file.name);
+  if(!okTypes.includes(file.type) && !okExt){
+    msg.style.color = '#c0614a';
+    msg.textContent = 'Attach only PDF, PNG, JPG, or JPEG.';
+    input.value = '';
+    currentReplyFile = null;
+    document.getElementById('replyFileName').textContent = '';
+    return;
+  }
+  currentReplyFile = file;
+  document.getElementById('replyFileName').textContent = file.name;
+}
+
+async function saveLetterReply(){
+  const id = document.getElementById('replyLetterId').value;
+  const character = document.getElementById('replyCharacter').value.trim();
+  const text = document.getElementById('replyText').value.trim();
+  const msg = document.getElementById('replyMsg');
+
+  if(!SUPABASE_READY){ msg.style.color='#c0614a'; msg.textContent='Supabase is not configured.'; return; }
+  if(!id){ msg.style.color='#c0614a'; msg.textContent='Select a reader letter first.'; return; }
+  if(!character){ msg.style.color='#c0614a'; msg.textContent='Type the character name replying.'; return; }
+  if(!text && !currentReplyFile){ msg.style.color='#c0614a'; msg.textContent='Write a reply or attach a file.'; return; }
+
+  msg.style.color = '#e8a96a';
+  msg.textContent = 'Saving reply…';
+
+  const existing = readerLetters.find(l=>l.id===id) || {};
+  let reply_file_url = existing.reply_file_url || null;
+  let reply_file_path = existing.reply_file_path || null;
+  let reply_file_type = existing.reply_file_type || null;
+
+  if(currentReplyFile){
+    const safeName = currentReplyFile.name.replace(/[^a-zA-Z0-9._-]/g,'-').toLowerCase();
+    reply_file_path = `kalindi-replies/${id}-${Date.now()}-${safeName}`;
+    reply_file_type = currentReplyFile.type || (safeName.endsWith('.pdf') ? 'application/pdf' : 'image');
+
+    const { error: uploadError } = await supabase.storage
+      .from(LETTER_REPLY_BUCKET)
+      .upload(reply_file_path, currentReplyFile, {
+        contentType: reply_file_type,
+        upsert: true
+      });
+
+    if(uploadError){
+      console.error(uploadError);
+      msg.style.color = '#c0614a';
+      msg.textContent = 'Reply file upload failed. Check letter-replies bucket and policies.';
+      return;
+    }
+
+    const { data } = supabase.storage.from(LETTER_REPLY_BUCKET).getPublicUrl(reply_file_path);
+    reply_file_url = data.publicUrl;
+  }
+
+  const { error } = await supabase
+    .from(LETTERS_TABLE)
+    .update({
+      reply: text,
+      reply_character: character,
+      reply_file_url,
+      reply_file_path,
+      reply_file_type,
+      replied_at: new Date().toISOString()
+    })
+    .eq('id', id);
+
+  if(error){
+    console.error(error);
+    msg.style.color = '#c0614a';
+    msg.textContent = 'Reply could not be saved. Check update policy and reply columns.';
+    return;
+  }
+
+  msg.style.color = '#e8a96a';
+  msg.textContent = 'Reply saved.';
+  currentReplyFile = null;
+  document.getElementById('replyFileInput').value = '';
+  document.getElementById('replyFileName').textContent = '';
+  await loadLettersFromSupabase();
+  renderLettersManage();
+}
+
+function clearLetterReplyForm(){
+  const ids = ['replyLetterId','replyTarget','replyCharacter','replyText','replyFileName','replyMsg'];
+  ids.forEach(id=>{ const el = document.getElementById(id); if(el) el.value !== undefined ? el.value = '' : el.textContent = ''; });
+  const fileInput = document.getElementById('replyFileInput');
+  if(fileInput) fileInput.value = '';
+  currentReplyFile = null;
+}
+
+function formatLetterDate(value){
+  if(!value) return '';
+  try{ return new Date(value).toLocaleDateString(); }catch(e){ return ''; }
+}
 
 // ──────────────────────────────────────────────
 // HELPERS
@@ -2097,7 +2326,13 @@ Object.assign(window, {
   deleteArtwork,
   removeArtworkImage,
   clearArtworkDescription,
-  resetArtworkForm
+  resetArtworkForm,
+  openLettersPage,
+  renderLettersManage,
+  selectLetterForReply,
+  onReplyFileSelect,
+  saveLetterReply,
+  clearLetterReplyForm
 });
 
 // ── INIT ──
