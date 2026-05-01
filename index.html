@@ -1055,6 +1055,27 @@ footer a:hover{color:var(--amber-light)}
         <p class="manage-empty">Open this section to load reader letters.</p>
       </div>
 
+      <p class="studio-section-title">Publish Standalone Character Letter</p>
+      <div class="upload-form">
+        <label class="s-label">Character Name</label>
+        <input class="s-input" type="text" id="characterLetterName" placeholder="e.g. Ayansh, Venkat Sir, Mrs. Sen" style="margin-bottom:0.8rem"/>
+
+        <label class="s-label">Character Letter</label>
+        <textarea class="s-textarea" id="characterLetterText" placeholder="Write a standalone letter from this character to the Letters to Kalindi page..." style="margin-bottom:0.8rem"></textarea>
+
+        <div class="file-drop" id="characterLetterFileDrop">
+          <input type="file" accept=".pdf,.png,.jpg,.jpeg,application/pdf,image/png,image/jpeg" id="characterLetterFileInput" onchange="onCharacterLetterFileSelect(this)"/>
+          <p class="file-drop-text">Attach PDF / PNG / JPG / JPEG with the character letter (optional)</p>
+          <p class="file-name" id="characterLetterFileName"></p>
+        </div>
+
+        <div class="studio-actions">
+          <button class="s-submit" onclick="publishCharacterLetter()">Publish Character Letter</button>
+          <button class="s-submit ghost" onclick="clearCharacterLetterForm()" type="button">Clear Character Letter</button>
+        </div>
+        <div class="form-msg" id="characterLetterMsg"></div>
+      </div>
+
       <p class="studio-section-title" id="replyFormTitle">Reply as a Character</p>
       <div class="upload-form">
         <input type="hidden" id="replyLetterId"/>
@@ -1127,6 +1148,7 @@ let currentArtworkImageFile = null;
 let editingArtworkImagePath = null;
 let readerLetters = [];
 let currentReplyFile = null;
+let currentCharacterLetterFile = null;
 
 // ──────────────────────────────────────────────
 // LOAD episodes on page start
@@ -1560,6 +1582,10 @@ const replyDrop = document.getElementById('replyFileDrop');
 replyDrop?.addEventListener('dragenter',()=>replyDrop.classList.add('drag'));
 replyDrop?.addEventListener('dragleave',()=>replyDrop.classList.remove('drag'));
 replyDrop?.addEventListener('drop',()=>replyDrop.classList.remove('drag'));
+const characterLetterDrop = document.getElementById('characterLetterFileDrop');
+characterLetterDrop?.addEventListener('dragenter',()=>characterLetterDrop.classList.add('drag'));
+characterLetterDrop?.addEventListener('dragleave',()=>characterLetterDrop.classList.remove('drag'));
+characterLetterDrop?.addEventListener('drop',()=>characterLetterDrop.classList.remove('drag'));
 
 async function saveEpisode(){
   const num = parseInt(document.getElementById('epNum').value);
@@ -2126,24 +2152,135 @@ function renderLettersManage(){
     }
     list.innerHTML = readerLetters.map(letter=>{
       const shortText = (letter.letter_content || '').trim();
-      const target = letter.target_character ? `To ${esc(letter.target_character)} · ` : '';
-      const replied = letter.reply ? 'Replied' : 'No reply yet';
-      const sender = letter.sender_name || 'Unnamed reader';
+      const isCharacterLetter = letter.letter_type === 'character' || letter.is_author_post === true;
+      const target = isCharacterLetter ? 'Standalone character letter · ' : (letter.target_character ? `To ${esc(letter.target_character)} · ` : '');
+      const replied = isCharacterLetter ? 'Published' : (letter.reply ? 'Replied' : 'No reply yet');
+      const sender = isCharacterLetter ? (letter.character_name || letter.sender_name || 'Character') : (letter.sender_name || 'Unnamed reader');
       return `
         <div class="manage-item" style="align-items:flex-start">
           <div style="flex:1;min-width:0">
             <div class="manage-name" style="white-space:normal;overflow:visible;text-overflow:clip">${esc(sender)}</div>
             <div style="font-size:.82rem;color:rgba(200,118,58,.72);margin:.12rem 0 .35rem">${target}${formatLetterDate(letter.created_at)} · ${replied}</div>
             <div style="font-size:.9rem;color:rgba(245,237,224,.55);line-height:1.45">${esc(shortText.slice(0,150))}${shortText.length>150 ? '…' : ''}</div>
-            ${letter.reply ? `<div style="margin-top:.45rem;font-size:.86rem;color:rgba(232,169,106,.82)">↳ ${esc(letter.reply_character || 'Kalindi')} replied: ${esc(String(letter.reply).slice(0,90))}${String(letter.reply).length>90 ? '…' : ''}</div>` : ''}
+            ${letter.reply && !isCharacterLetter ? `<div style="margin-top:.45rem;font-size:.86rem;color:rgba(232,169,106,.82)">↳ ${esc(letter.reply_character || 'Kalindi')} replied: ${esc(String(letter.reply).slice(0,90))}${String(letter.reply).length>90 ? '…' : ''}</div>` : ''}
           </div>
           <div class="manage-actions">
-            <button class="manage-edit" onclick="selectLetterForReply('${escAttr(letter.id)}')">Reply</button>
+            ${isCharacterLetter ? '<span class="manage-edit" style="cursor:default;opacity:.65">Character Letter</span>' : `<button class="manage-edit" onclick="selectLetterForReply('${escAttr(letter.id)}')">Reply</button>`}
           </div>
         </div>
       `;
     }).join('');
   });
+}
+
+
+function onCharacterLetterFileSelect(input){
+  const file = input.files[0];
+  const msg = document.getElementById('characterLetterMsg');
+  if(!file){ currentCharacterLetterFile = null; document.getElementById('characterLetterFileName').textContent=''; return; }
+  const okTypes = ['application/pdf','image/png','image/jpeg','image/jpg'];
+  const okExt = /\.(pdf|png|jpe?g)$/i.test(file.name);
+  if(!okTypes.includes(file.type) && !okExt){
+    msg.style.color = '#c0614a';
+    msg.textContent = 'Attach only PDF, PNG, JPG, or JPEG.';
+    input.value = '';
+    currentCharacterLetterFile = null;
+    document.getElementById('characterLetterFileName').textContent = '';
+    return;
+  }
+  currentCharacterLetterFile = file;
+  document.getElementById('characterLetterFileName').textContent = file.name;
+}
+
+async function publishCharacterLetter(){
+  const character = document.getElementById('characterLetterName').value.trim();
+  const text = document.getElementById('characterLetterText').value.trim();
+  const msg = document.getElementById('characterLetterMsg');
+
+  if(!SUPABASE_READY){ msg.style.color='#c0614a'; msg.textContent='Supabase is not configured.'; return; }
+  if(!character){ msg.style.color='#c0614a'; msg.textContent='Type the character name.'; return; }
+  if(!text && !currentCharacterLetterFile){ msg.style.color='#c0614a'; msg.textContent='Write a letter or attach a file.'; return; }
+
+  msg.style.color = '#e8a96a';
+  msg.textContent = 'Publishing character letter…';
+
+  let image_url = null;
+  let image_path = null;
+  let reply_file_url = null;
+  let reply_file_path = null;
+  let reply_file_type = null;
+
+  if(currentCharacterLetterFile){
+    const safeName = currentCharacterLetterFile.name.replace(/[^a-zA-Z0-9._-]/g,'-').toLowerCase();
+    const isImage = (currentCharacterLetterFile.type || '').startsWith('image/') || /\.(png|jpe?g)$/i.test(safeName);
+    const bucket = isImage ? 'letter-images' : LETTER_REPLY_BUCKET;
+    const path = `${isImage ? 'character-letters' : 'character-letter-files'}/${Date.now()}-${safeName}`;
+    const fileType = currentCharacterLetterFile.type || (safeName.endsWith('.pdf') ? 'application/pdf' : 'image/jpeg');
+
+    const { error: uploadError } = await supabase.storage
+      .from(bucket)
+      .upload(path, currentCharacterLetterFile, { contentType:fileType, upsert:true });
+
+    if(uploadError){
+      console.error(uploadError);
+      msg.style.color = '#c0614a';
+      msg.textContent = `Attachment upload failed. Check ${bucket} bucket and policies.`;
+      return;
+    }
+
+    const { data } = supabase.storage.from(bucket).getPublicUrl(path);
+    if(isImage){
+      image_url = data.publicUrl;
+      image_path = path;
+    } else {
+      reply_file_url = data.publicUrl;
+      reply_file_path = path;
+      reply_file_type = fileType;
+    }
+  }
+
+  const { error } = await supabase
+    .from(LETTERS_TABLE)
+    .insert([{
+      letter_type:'character',
+      is_author_post:true,
+      sender_name: character,
+      sender_name_normalized: character.toLowerCase().replace(/\s+/g,' ').trim(),
+      character_name: character,
+      addressed_to: 'Letters to Kalindi',
+      letter_content: text,
+      image_url,
+      image_path,
+      reply_file_url,
+      reply_file_path,
+      reply_file_type,
+      is_approved:true,
+      is_pinned:false
+    }]);
+
+  if(error){
+    console.error(error);
+    msg.style.color = '#c0614a';
+    msg.textContent = 'Character letter could not be published. Check columns: letter_type, is_author_post, character_name, and policies.';
+    return;
+  }
+
+  msg.style.color = '#e8a96a';
+  msg.textContent = 'Character letter published.';
+  clearCharacterLetterForm(false);
+  await loadLettersFromSupabase();
+  renderLettersManage();
+}
+
+function clearCharacterLetterForm(clearMsg=true){
+  ['characterLetterName','characterLetterText','characterLetterFileName'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.value !== undefined ? el.value = '' : el.textContent = '';
+  });
+  const fileInput = document.getElementById('characterLetterFileInput');
+  if(fileInput) fileInput.value = '';
+  currentCharacterLetterFile = null;
+  if(clearMsg){ const msg = document.getElementById('characterLetterMsg'); if(msg) msg.textContent = ''; }
 }
 
 function selectLetterForReply(id){
@@ -2332,7 +2469,10 @@ Object.assign(window, {
   selectLetterForReply,
   onReplyFileSelect,
   saveLetterReply,
-  clearLetterReplyForm
+  clearLetterReplyForm,
+  onCharacterLetterFileSelect,
+  publishCharacterLetter,
+  clearCharacterLetterForm
 });
 
 // ── INIT ──
