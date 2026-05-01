@@ -131,7 +131,7 @@ async function sendLetter(e){
   msg.style.color='#e8a96a'; msg.textContent='Sending your letter...';
   try{
     const image = await uploadImage(currentImageFile);
-    const payload = { sender_name, sender_name_normalized:normalizeName(sender_name), addressed_to, letter_content, image_url:image.image_url, image_path:image.image_path, is_approved:true, is_pinned:false };
+    const payload = { sender_name, sender_name_normalized:normalizeName(sender_name), addressed_to, letter_content, image_url:image.image_url, image_path:image.image_path, letter_type:'reader', is_author_post:false, character_name:null, is_approved:true, is_pinned:false };
     const { error } = await supabase.from(LETTERS_TABLE).insert([payload]);
     if(error) throw error;
     msg.style.color='#e8a96a'; msg.textContent='Your letter has been placed on the table.';
@@ -143,6 +143,7 @@ async function sendLetter(e){
 }
 
 function publicImage(url){ return url ? `<div class="letter-image"><img src="${escAttr(url)}" alt="Attached reader image"></div>` : ''; }
+
 function attachmentMarkup(url, type, label='Open attachment'){
   if(!url) return '';
   const isImage = (type || '').startsWith('image/') || /\.(png|jpe?g|webp|gif)(\?|$)/i.test(url);
@@ -171,17 +172,33 @@ async function loadLetters(){
   if(error){ console.error(error); list.innerHTML='<div class="empty">Could not load letters. Check Supabase policies and columns.</div>'; return; }
   letters = data || [];
   if(!letters.length){ list.innerHTML='<div class="empty">No letters yet. Be the first one to leave a note.</div>'; return; }
-  list.innerHTML = letters.map(l => `
-    <article class="letter-card">
-      <div class="letter-top">
-        <div><div class="sender">${esc(l.sender_name)}</div><div class="addressed">To: ${esc(l.addressed_to || 'Kalindi\'s Café')}</div></div>
-        <div class="date">${esc(dateText(l.created_at))}</div>
-      </div>
-      <div class="letter-text">${esc(l.letter_content)}</div>
-      ${publicImage(l.image_url)}
-      ${replyMarkup(l)}
-    </article>
-  `).join('');
+  list.innerHTML = letters.map(l => {
+    const isCharacterLetter = l.letter_type === 'character' || l.is_author_post === true;
+    if(isCharacterLetter){
+      const asName = l.character_name || l.sender_name || 'Kalindi';
+      return `
+        <article class="letter-card">
+          <div class="reply-box">
+            <div class="reply-label">Letter from ${esc(asName)} · ${esc(dateText(l.created_at))}</div>
+            ${l.letter_content ? `<div class="reply-text">${esc(l.letter_content)}</div>` : ''}
+            ${publicImage(l.image_url)}
+            ${attachmentMarkup(l.reply_file_url, l.reply_file_type, 'Open character letter attachment')}
+          </div>
+        </article>
+      `;
+    }
+    return `
+      <article class="letter-card">
+        <div class="letter-top">
+          <div><div class="sender">${esc(l.sender_name)}</div><div class="addressed">To: ${esc(l.addressed_to || 'Kalindi\'s Café')}</div></div>
+          <div class="date">${esc(dateText(l.created_at))}</div>
+        </div>
+        <div class="letter-text">${esc(l.letter_content)}</div>
+        ${publicImage(l.image_url)}
+        ${replyMarkup(l)}
+      </article>
+    `;
+  }).join('');
 }
 
 
