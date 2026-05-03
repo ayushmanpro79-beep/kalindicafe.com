@@ -1645,24 +1645,78 @@ async function saveEpisode(){
 }
 
 async function deleteEpisode(num){
-  if(!confirm(`Delete Episode ${num}?`)) return;
-  const ep = episodes.find(e=>e.num===num);
+  const episodeNum = Number(num);
+  if(!Number.isFinite(episodeNum)){
+    alert('Invalid episode number.');
+    return;
+  }
+
+  if(!confirm(`Delete Episode ${episodeNum}?`)) return;
+
+  const msg = document.getElementById('formMsg');
+  const ep = episodes.find(e => Number(e.num) === episodeNum);
+
+  if(msg){
+    msg.style.color = '#e8a96a';
+    msg.textContent = `Deleting Episode ${episodeNum}...`;
+  }
 
   if(SUPABASE_READY){
-    const { error: dbError } = await supabase.from(EPISODES_TABLE).delete().eq('num', num);
-    if(dbError){ alert('Could not delete episode details.'); console.error(dbError); return; }
-    if(ep && ep.pdf_path){
-      const { error: fileError } = await supabase.storage.from(PDF_BUCKET).remove([ep.pdf_path]);
-      if(fileError) console.warn('Episode removed from list, but PDF file removal failed:', fileError);
+    // Delete the database row first. If this fails, the episode will keep showing in the list.
+    // IMPORTANT: your Supabase episodes table must have a DELETE policy for this to work.
+    const { data: deletedRows, error: dbError } = await supabase
+      .from(EPISODES_TABLE)
+      .delete()
+      .eq('num', episodeNum)
+      .select('num,pdf_path');
+
+    if(dbError){
+      console.error('Episode delete database error:', dbError);
+      if(msg){
+        msg.style.color = '#c0614a';
+        msg.textContent = 'Could not delete episode. Check DELETE policy on the episodes table.';
+      }
+      alert('Could not delete episode. Check Supabase DELETE policy on the episodes table.');
+      return;
     }
+
+    if(!deletedRows || deletedRows.length === 0){
+      console.warn('No episode row was deleted. This usually means the episode number did not match or RLS blocked DELETE.');
+      if(msg){
+        msg.style.color = '#c0614a';
+        msg.textContent = 'No episode was deleted. Check the episode number and Supabase DELETE policy.';
+      }
+      alert('No episode was deleted. Most likely Supabase RLS is blocking DELETE.');
+      await loadEpisodesFromSupabase();
+      renderPublic();
+      renderManage();
+      return;
+    }
+
+    // Remove the PDF from storage after the row is deleted. If storage deletion fails, the episode still disappears from the site.
+    const pdfPath = deletedRows[0]?.pdf_path || ep?.pdf_path;
+    if(pdfPath){
+      const { error: fileError } = await supabase.storage.from(PDF_BUCKET).remove([pdfPath]);
+      if(fileError){
+        console.warn('Episode row deleted, but PDF file removal failed:', fileError);
+      }
+    }
+
     await loadEpisodesFromSupabase();
   } else {
-    episodes = episodes.filter(e=>e.num!==num);
+    episodes = episodes.filter(e => Number(e.num) !== episodeNum);
     localStorage.setItem(STORE_KEY, JSON.stringify(episodes));
   }
+
   renderPublic();
   renderManage();
+
+  if(msg){
+    msg.style.color = '#e8a96a';
+    msg.textContent = `Episode ${episodeNum} deleted.`;
+  }
 }
+
 
 function renderManage(){
   const list = document.getElementById('manageList');
