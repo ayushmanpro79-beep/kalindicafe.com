@@ -1050,7 +1050,7 @@ footer a:hover{color:var(--amber-light)}
     <div id="lettersStudio" class="studio-tab">
       <button class="back-choice" onclick="backToStudioChoice()">← Back to Studio Options</button>
 
-      <p class="studio-section-title">Reader Letters</p>
+      <p class="studio-section-title">Letters & Reply Threads</p>
       <div class="manage-list" id="lettersManageList">
         <p class="manage-empty">Open this section to load reader letters.</p>
       </div>
@@ -1081,7 +1081,7 @@ footer a:hover{color:var(--amber-light)}
         <input type="hidden" id="replyLetterId"/>
 
         <label class="s-label">Selected Letter</label>
-        <input class="s-input" type="text" id="replyTarget" readonly placeholder="Select a reader letter above" style="margin-bottom:0.8rem"/>
+        <input class="s-input" type="text" id="replyTarget" readonly placeholder="Select any top-level reader or character letter above" style="margin-bottom:0.8rem"/>
 
         <label class="s-label">Character Name</label>
         <input class="s-input" type="text" id="replyCharacter" placeholder="e.g. Venkat Sir, Mrs. Sen, Ayansh" style="margin-bottom:0.8rem"/>
@@ -2200,26 +2200,28 @@ function renderLettersManage(){
   }
   list.innerHTML = '<p class="manage-empty">Loading letters…</p>';
   loadLettersFromSupabase().then(()=>{
-    if(!readerLetters.length){
-      list.innerHTML = '<p class="manage-empty">No reader letters yet.</p>';
+    const topLevel = readerLetters.filter(l => !l.parent_letter_id);
+    if(!topLevel.length){
+      list.innerHTML = '<p class="manage-empty">No letters yet.</p>';
       return;
     }
-    list.innerHTML = readerLetters.map(letter=>{
+    list.innerHTML = topLevel.map(letter=>{
       const shortText = (letter.letter_content || '').trim();
       const isCharacterLetter = letter.letter_type === 'character' || letter.is_author_post === true;
-      const target = isCharacterLetter ? 'Standalone character letter · ' : (letter.target_character ? `To ${esc(letter.target_character)} · ` : '');
-      const replied = isCharacterLetter ? 'Published' : (letter.reply ? 'Replied' : 'No reply yet');
       const sender = isCharacterLetter ? (letter.character_name || letter.sender_name || 'Character') : (letter.sender_name || 'Unnamed reader');
+      const target = isCharacterLetter ? 'Standalone character letter' : `To ${esc(letter.addressed_to || letter.target_character || 'Kalindi\'s Café')}`;
+      const childCount = readerLetters.filter(r => String(r.parent_letter_id || '') === String(letter.id)).length;
+      const legacyReply = letter.reply && !isCharacterLetter ? `<div style="margin-top:.45rem;font-size:.86rem;color:rgba(232,169,106,.82)">↳ ${esc(letter.reply_character || 'Kalindi')} replied: ${esc(String(letter.reply).slice(0,90))}${String(letter.reply).length>90 ? '…' : ''}</div>` : '';
       return `
         <div class="manage-item" style="align-items:flex-start">
           <div style="flex:1;min-width:0">
             <div class="manage-name" style="white-space:normal;overflow:visible;text-overflow:clip">${esc(sender)}</div>
-            <div style="font-size:.82rem;color:rgba(200,118,58,.72);margin:.12rem 0 .35rem">${target}${formatLetterDate(letter.created_at)} · ${replied}</div>
+            <div style="font-size:.82rem;color:rgba(200,118,58,.72);margin:.12rem 0 .35rem">${target} · ${formatLetterDate(letter.created_at)} · ${childCount} thread ${childCount===1?'reply':'replies'}</div>
             <div style="font-size:.9rem;color:rgba(245,237,224,.55);line-height:1.45">${esc(shortText.slice(0,150))}${shortText.length>150 ? '…' : ''}</div>
-            ${letter.reply && !isCharacterLetter ? `<div style="margin-top:.45rem;font-size:.86rem;color:rgba(232,169,106,.82)">↳ ${esc(letter.reply_character || 'Kalindi')} replied: ${esc(String(letter.reply).slice(0,90))}${String(letter.reply).length>90 ? '…' : ''}</div>` : ''}
+            ${legacyReply}
           </div>
           <div class="manage-actions">
-            ${isCharacterLetter ? '<span class="manage-edit" style="cursor:default;opacity:.65">Character Letter</span>' : `<button class="manage-edit" onclick="selectLetterForReply('${escAttr(letter.id)}')">Reply</button>`}
+            <button class="manage-edit" onclick="selectLetterForReply('${escAttr(letter.id)}')">Reply</button>
           </div>
         </div>
       `;
@@ -2297,6 +2299,7 @@ async function publishCharacterLetter(){
     .from(LETTERS_TABLE)
     .insert([{
       letter_type:'character',
+      parent_letter_id:null,
       is_author_post:true,
       sender_name: character,
       sender_name_normalized: character.toLowerCase().replace(/\s+/g,' ').trim(),
@@ -2338,15 +2341,17 @@ function clearCharacterLetterForm(clearMsg=true){
 }
 
 function selectLetterForReply(id){
-  const letter = readerLetters.find(l=>l.id===id);
+  const letter = readerLetters.find(l=>String(l.id)===String(id));
   if(!letter) return;
+  const isCharacterLetter = letter.letter_type === 'character' || letter.is_author_post === true;
+  const fromName = isCharacterLetter ? (letter.character_name || letter.sender_name || 'Character') : (letter.sender_name || 'Unnamed reader');
   document.getElementById('replyLetterId').value = id;
-  document.getElementById('replyTarget').value = `${letter.sender_name || 'Unnamed reader'} — ${(letter.letter_content || '').slice(0,70)}${(letter.letter_content || '').length>70 ? '…' : ''}`;
-  document.getElementById('replyCharacter').value = letter.reply_character || '';
-  document.getElementById('replyText').value = letter.reply || '';
-  document.getElementById('replyFileName').textContent = letter.reply_file_path ? `Existing attachment: ${letter.reply_file_path.split('/').pop()}` : '';
+  document.getElementById('replyTarget').value = `${fromName} — ${(letter.letter_content || '').slice(0,70)}${(letter.letter_content || '').length>70 ? '…' : ''}`;
+  document.getElementById('replyCharacter').value = '';
+  document.getElementById('replyText').value = '';
+  document.getElementById('replyFileName').textContent = '';
   document.getElementById('replyMsg').style.color = '#e8a96a';
-  document.getElementById('replyMsg').textContent = `Selected letter from ${letter.sender_name || 'reader'}.`;
+  document.getElementById('replyMsg').textContent = `Selected ${isCharacterLetter ? 'character letter' : 'reader letter'} from ${fromName}.`;
 }
 
 function onReplyFileSelect(input){
@@ -2374,17 +2379,16 @@ async function saveLetterReply(){
   const msg = document.getElementById('replyMsg');
 
   if(!SUPABASE_READY){ msg.style.color='#c0614a'; msg.textContent='Supabase is not configured.'; return; }
-  if(!id){ msg.style.color='#c0614a'; msg.textContent='Select a reader letter first.'; return; }
+  if(!id){ msg.style.color='#c0614a'; msg.textContent='Select a letter first.'; return; }
   if(!character){ msg.style.color='#c0614a'; msg.textContent='Type the character name replying.'; return; }
   if(!text && !currentReplyFile){ msg.style.color='#c0614a'; msg.textContent='Write a reply or attach a file.'; return; }
 
   msg.style.color = '#e8a96a';
-  msg.textContent = 'Saving reply…';
+  msg.textContent = 'Saving threaded character reply…';
 
-  const existing = readerLetters.find(l=>l.id===id) || {};
-  let reply_file_url = existing.reply_file_url || null;
-  let reply_file_path = existing.reply_file_path || null;
-  let reply_file_type = existing.reply_file_type || null;
+  let reply_file_url = null;
+  let reply_file_path = null;
+  let reply_file_type = null;
 
   if(currentReplyFile){
     const safeName = currentReplyFile.name.replace(/[^a-zA-Z0-9._-]/g,'-').toLowerCase();
@@ -2393,10 +2397,7 @@ async function saveLetterReply(){
 
     const { error: uploadError } = await supabase.storage
       .from(LETTER_REPLY_BUCKET)
-      .upload(reply_file_path, currentReplyFile, {
-        contentType: reply_file_type,
-        upsert: true
-      });
+      .upload(reply_file_path, currentReplyFile, { contentType: reply_file_type, upsert: true });
 
     if(uploadError){
       console.error(uploadError);
@@ -2411,28 +2412,37 @@ async function saveLetterReply(){
 
   const { error } = await supabase
     .from(LETTERS_TABLE)
-    .update({
-      reply: text,
-      reply_character: character,
+    .insert([{
+      parent_letter_id: id,
+      letter_type:'character_reply',
+      is_author_post:true,
+      sender_name: character,
+      sender_name_normalized: character.toLowerCase().replace(/\s+/g,' ').trim(),
+      character_name: character,
+      addressed_to: 'Reply',
+      letter_content: text,
+      image_url:null,
+      image_path:null,
       reply_file_url,
       reply_file_path,
       reply_file_type,
-      replied_at: new Date().toISOString()
-    })
-    .eq('id', id);
+      is_approved:true,
+      is_pinned:false
+    }]);
 
   if(error){
     console.error(error);
     msg.style.color = '#c0614a';
-    msg.textContent = 'Reply could not be saved. Check update policy and reply columns.';
+    msg.textContent = 'Reply could not be saved. Check parent_letter_id column and insert policy.';
     return;
   }
 
   msg.style.color = '#e8a96a';
-  msg.textContent = 'Reply saved.';
+  msg.textContent = 'Threaded reply saved.';
   currentReplyFile = null;
   document.getElementById('replyFileInput').value = '';
   document.getElementById('replyFileName').textContent = '';
+  document.getElementById('replyText').value = '';
   await loadLettersFromSupabase();
   renderLettersManage();
 }
